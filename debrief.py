@@ -3,17 +3,17 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""Sortiert MacWhisper-Transkripte im Obsidian-Vault.
+"""Files MacWhisper transcripts in the Obsidian vault.
 
-Für jede neue Notiz im Inbox-Ordner:
-  1. Klassifizierung (Kunde/intern), Zusammenfassung und Todos per `claude -p`
-  2. Frontmatter ergänzen, Abschnitte vor das Transkript setzen
-  3. Notiz als `<Datum> <Titel>.md` in den Ordner der Kategorie verschieben
+For every new note in the inbox folder:
+  1. Classification (customer/internal), summary and todos via `claude -p`
+  2. Add frontmatter, put the sections in front of the transcript
+  3. Move the note as `<date> <title>.md` into the category's folder
 
-Aufruf:  uv run --script debrief.py [--dry-run] [--config config.yaml] [datei.md ...]
+Usage:  uv run --script debrief.py [--dry-run] [--config config.yaml] [file.md ...]
 
-Normalerweise läuft das über server.py: dort wird jeder Vorschlag erst geprüft und
-bestätigt. Dieses Skript direkt aufzurufen sortiert ohne Rückfrage ein.
+Normally this runs via server.py, where every suggestion is reviewed and confirmed
+first. Calling this script directly files notes without asking.
 """
 
 from __future__ import annotations
@@ -41,10 +41,10 @@ log = logging.getLogger("debrief")
 
 
 KATEGORIEN_HEADER = """\
-# Kategorien: Schlüssel = Wert für das Property `kunde`.
-# `hinweise` helfen dem Modell beim Zuordnen (Personen, Projekte, Begriffe).
-# Projekte landen in `<ordner>/<Projekt>`, betreute Personen in `<ordner>/<Projekt>/<Person>`.
-# Wird auch von der Review-Seite geschrieben (Kommentare gehen dabei verloren).
+# Categories: key = value for the `kunde` property.
+# `hinweise` (hints) help the model with assignment (people, projects, terms).
+# Projects end up in `<ordner>/<project>`, supervised people in `<ordner>/<project>/<person>`.
+# Also written by the review page (comments are lost in the process).
 """
 
 
@@ -86,7 +86,7 @@ def save_kategorien(cfg: dict, kategorien: dict) -> None:
     kategorien = normalize_kategorien(kategorien)
     for key, cat in kategorien.items():
         if not re.fullmatch(r"[\w-]+", key) or not cat.get("ordner"):
-            raise ValueError(f"Ungültige Kategorie: {key!r} (Name ohne Leerzeichen, Ordner nötig)")
+            raise ValueError(f"Invalid category: {key!r} (name without spaces, folder required)")
         safe_folder(cfg, cat["ordner"])
     tmp = cfg["kategorien_datei"].with_suffix(".tmp")
     tmp.write_text(KATEGORIEN_HEADER + yaml.safe_dump(kategorien, sort_keys=False, allow_unicode=True))
@@ -98,7 +98,7 @@ def save_kategorien(cfg: dict, kategorien: dict) -> None:
 def safe_folder(cfg: dict, folder: str) -> Path:
     path = (cfg["vault"] / folder).resolve()
     if not path.is_relative_to(cfg["vault"].resolve()):
-        raise ValueError(f"Ordner liegt außerhalb des Vaults: {folder}")
+        raise ValueError(f"Folder is outside the vault: {folder}")
     return path
 
 
@@ -189,9 +189,9 @@ def korrekturen_prompt(cfg: dict) -> str:
     if not korrekturen:
         return ""
     fmt = lambda z: ", ".join(f"{k}={v}" for k, v in z.items() if v) or "–"
-    lines = [f"- „{k['titel']}“: {k['kurz']} → richtig: {fmt(k['richtig'])} (du hattest: {fmt(k['vorschlag'])})"
+    lines = [f"- \"{k['titel']}\": {k['kurz']} → correct: {fmt(k['richtig'])} (you had: {fmt(k['vorschlag'])})"
              for k in korrekturen]
-    return (f"\n\nFrühere Korrekturen durch {cfg['ich']} – ähnliche Gespräche genauso zuordnen:\n"
+    return (f"\n\nEarlier corrections by {cfg['ich']} - assign similar conversations the same way:\n"
             + "\n".join(lines))
 
 
@@ -341,12 +341,12 @@ def calendar_candidates(cfg: dict, meta: dict) -> list[dict]:
                        stderr=subprocess.DEVNULL)  # "Unable to block on applications" if the app finishes faster
         data = json.loads(out.read_text() or "[]")
     except Exception:
-        log.exception("Kalender nicht lesbar")
+        log.exception("Calendar not readable")
         return []
     finally:
         out.unlink(missing_ok=True)
     if isinstance(data, dict):
-        log.warning("Kalender: %s", data.get("fehler"))
+        log.warning("Calendar: %s", data.get("fehler"))
         return []
     scored = []
     for e in data:
@@ -365,22 +365,22 @@ def calendar_candidates(cfg: dict, meta: dict) -> list[dict]:
 def termin_line(termin: dict, limit: int) -> str:
     people = [p for p in termin.get("teilnehmer", []) if not p.get("ich")]
     names = ", ".join(p["name"] or p["email"] for p in people[:limit])
-    more = f" und {len(people) - limit} weitere" if len(people) > limit else ""
+    more = f" and {len(people) - limit} more" if len(people) > limit else ""
     org = termin.get("organisator") or {}
     return (f"{termin['titel']} ({termin['start'][11:16]}–{termin['ende'][11:16]})"
-            + (f"; Organisator: {org.get('name') or org.get('email')}" if org else "")
-            + (f"; Eingeladene ({len(people)}): {names}{more}" if people else "; keine Eingeladenen"))
+            + (f"; organizer: {org.get('name') or org.get('email')}" if org else "")
+            + (f"; invitees ({len(people)}): {names}{more}" if people else "; no invitees"))
 
 
 def termin_prompt(termine: list[dict], fixed: bool = False) -> str:
     """Calendar events as context. `fixed`: confirmed by the user, otherwise the model picks via `termin_index`."""
     if not termine:
-        return "Kalendertermine zur Aufnahmezeit: keine\n"
+        return "Calendar events at recording time: none\n"
     if fixed:
-        return f"Kalendertermin (vom Nutzer bestätigt): {termin_line(termine[0], 20)}\n"
+        return f"Calendar event (confirmed by the user): {termin_line(termine[0], 20)}\n"
     lines = "\n".join(f"[{i}] {termin_line(t, 10)}" for i, t in enumerate(termine))
-    return ("Kalendertermine rund um die Aufnahmezeit – welcher gehört zu diesem Gespräch? "
-            "Meetings überziehen oft oder werden erst spät aufgenommen; entscheide nach Inhalt, Titel und Teilnehmern:\n"
+    return ("Calendar events around the recording time - which one belongs to this conversation? "
+            "Meetings often overrun or are only recorded late; decide by content, title and participants:\n"
             + lines + "\n")
 
 
@@ -391,32 +391,32 @@ def build_schema(categories: list[str]) -> dict:
             "kategorie": {"type": "string", "enum": [*categories, "unklar"]},
             "konfidenz": {"type": "number", "minimum": 0, "maximum": 1},
             "begruendung": {"type": "string"},
-            "titel": {"type": "string", "description": "Kurzer, sprechender Titel, max. 60 Zeichen, ohne Datum"},
+            "titel": {"type": "string", "description": "Short, descriptive title, max. 60 characters, no date"},
             "projekt": {"type": ["string", "null"]},
             "person": {"type": ["string", "null"],
-                       "description": "Betreute Person aus der Projektliste, um die es hauptsächlich geht"},
+                       "description": "Supervised person from the project list that the conversation is mainly about"},
             "tags": {"type": "array", "items": {"type": "string"}, "maxItems": 5,
-                     "description": "Themen-Tags, kleingeschrieben, ohne Personennamen"},
+                     "description": "Topic tags, lowercase, without person names"},
             "termin_index": {"type": ["integer", "null"],
-                             "description": "Index des passenden Kalendertermins aus der Liste, null wenn keiner passt"},
+                             "description": "Index of the matching calendar event from the list, null if none fits"},
             "sprecher_vorschlaege": {
                 "type": "array",
-                "description": "Nur für Platzhalter-Sprecher („Speaker 1“ …), die im Text markiert sind: wer ist das "
-                               "vermutlich? Leer, wenn es keine Hinweise gibt.",
+                "description": "Only for placeholder speakers (\"Speaker 1\" ...) marked in the text: who is this "
+                               "likely to be? Empty if there are no clues. Write in the language of the conversation.",
                 "items": {
                     "type": "object",
                     "properties": {
-                        "sprecher": {"type": "string", "description": "z. B. Speaker 1"},
+                        "sprecher": {"type": "string", "description": "e.g. Speaker 1"},
                         "name": {"type": "string"},
-                        "hinweis": {"type": "string", "description": "kurz, woran erkannt (Anrede, Vorstellung, Termin)"},
+                        "hinweis": {"type": "string", "description": "brief, how recognized (form of address, introduction, event)"},
                     },
                     "required": ["sprecher", "name", "hinweis"],
                 },
             },
             "zusammenfassung": {
                 "type": "string", "minLength": 50,
-                "description": "Markdown: 1-2 einleitende Sätze (worum ging es, mit wem), dann eine Leerzeile und "
-                               "3-6 Stichpunkte im Format '- **Thema:** Kernaussage'. Keine Überschriften.",
+                "description": "Markdown: 1-2 introductory sentences (what it was about, with whom), then a blank line and "
+                               "3-6 bullet points in the format '- **Topic:** key statement'. No headings.",
             },
             "entscheidungen": {"type": "array", "items": {"type": "string"}},
             "todos": {
@@ -425,10 +425,10 @@ def build_schema(categories: list[str]) -> dict:
                     "type": "object",
                     "properties": {
                         "aufgabe": {"type": "string",
-                                    "description": "Kurz und konkret, mit Verb beginnen, höchstens etwa 12 Wörter, "
-                                                   "ohne Termin und ohne Verantwortlichen im Text"},
+                                    "description": "Short and concrete, start with a verb, at most about 12 words, "
+                                                   "no due date and no responsible person in the text"},
                         "verantwortlich": {"type": ["string", "null"]},
-                        "faellig": {"type": ["string", "null"], "description": "YYYY-MM-DD oder null"},
+                        "faellig": {"type": ["string", "null"], "description": "YYYY-MM-DD or null"},
                         "ist_meins": {"type": "boolean"},
                     },
                     "required": ["aufgabe", "verantwortlich", "faellig", "ist_meins"],
@@ -452,36 +452,38 @@ def build_system_prompt(cfg: dict) -> str:
                 line += f" (betreute Personen: {', '.join(proj['personen'])})"
             lines.append(line)
     cats = "\n".join(lines)
-    return f"""Du analysierst Transkripte von Gesprächen und Meetings von {cfg['ich']}{role(cfg)}.
+    return f"""You analyze transcripts of conversations and meetings of {cfg['ich']}{role(cfg)}.
 
-Ordne das Gespräch genau einer Kategorie zu:
+Assign the conversation to exactly one category:
 {cats}
-- unklar: wenn keine Kategorie eindeutig passt
+- unklar: if no category clearly fits
 
-Sind unter der Kategorie Projekte gelistet und passt eines, setze "projekt" exakt auf dessen Namen,
-sonst auf einen kurzen eigenen Projektnamen oder null.
-Geht es hauptsächlich um eine der betreuten Personen, setze "person" exakt auf deren Namen, sonst null.
-Namen können im Transkript falsch geschrieben sein (z. B. "Schwalbe" statt "Schwalb").
+If projects are listed under the category and one fits, set "projekt" to exactly its name,
+otherwise to a short project name of your own or null.
+If the conversation is mainly about one of the supervised people, set "person" to exactly their name, otherwise null.
+Names may be misspelled in the transcript (e.g. "Schwalbe" instead of "Schwalb").
 
-Entscheidend ist, mit wem und wofür das Gespräch geführt wird, nicht welche Firmen nur erwähnt werden.
-Ein internes Gespräch unter Kolleginnen und Kollegen, in dem nur über einen Kunden geplaudert wird, gehört in die interne Kategorie.
+What matters is with whom and for what purpose the conversation is held, not which companies are merely mentioned.
+An internal conversation among colleagues in which a customer is only chatted about belongs in the internal category.
 
-Die Zusammenfassung ist für einen schnellen Überblick: kurze Einleitung, dann Stichpunkte mit fett
-gesetztem Thema. Zahlen, Namen und Termine konkret nennen, keine Füllsätze.
+The summary is for a quick overview: a short introduction, then bullet points with the topic in bold.
+Name numbers, names and dates concretely, no filler sentences.
 
-Extrahiere konkrete Aufgaben (Todos), Zusagen und Follow-ups. Keine vagen Absichten.
-Formuliere jedes Todo knapp wie einen Listeneintrag („Checkliste für agentische Projekte erstellen“), Details gehören
-in die Zusammenfassung, Termin und Verantwortliche in die eigenen Felder.
-"ist_meins" = true, wenn {cfg['ich']} die Aufgabe übernimmt oder sie ihm zugewiesen wird.
-Relative Fristen ("bis Freitag") rechnest du ab dem Aufnahmedatum in ein Datum um.
-Sprecher heißen im Transkript evtl. nur "Speaker 1" usw.; nutze echte Namen, wenn sie im Gespräch fallen.
-Schlage unter "sprecher_vorschlaege" vor, wer hinter einem Platzhalter-Sprecher steckt – nur mit konkretem Hinweis
-(jemand wird mit Namen angesprochen, stellt sich vor, Eingeladene des Termins passen zur Rolle). Nie raten;
-{cfg['ich']} ist nie ein Platzhalter.
-Sind Kalendertermine angegeben, wähle den zum Gespräch passenden (termin_index) und nutze dessen Titel und
-Eingeladene als starken Hinweis für Zuordnung und Namen. Große Runden mit sehr vielen Eingeladenen sind nur dann
-richtig, wenn der Inhalt dazu passt.
-Antworte auf Deutsch.""" + korrekturen_prompt(cfg)
+Extract concrete tasks (todos), commitments and follow-ups. No vague intentions.
+Phrase each todo tersely like a list entry ("Create checklist for agentic projects"); details belong
+in the summary, due date and responsible person in their own fields.
+"ist_meins" = true if {cfg['ich']} takes on the task or it is assigned to him.
+You convert relative deadlines ("by Friday") into a date, counting from the recording date.
+Speakers in the transcript may only be named "Speaker 1" etc.; use real names when they come up in the conversation.
+Under "sprecher_vorschlaege" suggest who is behind a placeholder speaker - only with a concrete clue
+(someone is addressed by name, introduces themselves, invitees of the event fit the role). Never guess;
+{cfg['ich']} is never a placeholder.
+If calendar events are given, pick the one that fits the conversation (termin_index) and use its title and
+invitees as a strong clue for assignment and names. Large groups with very many invitees are only
+correct if the content fits.
+Write the summary ("zusammenfassung"), decisions ("entscheidungen"), todo texts ("aufgabe") and speaker hints
+("hinweis") in the language in which the conversation was held (do not translate them to English).
+Respond with the JSON as specified by the schema.""" + korrekturen_prompt(cfg)
 
 
 def gateway_token(gw: dict) -> str:
@@ -489,16 +491,16 @@ def gateway_token(gw: dict) -> str:
     if gw.get("token_cmd"):
         proc = subprocess.run(gw["token_cmd"], shell=True, capture_output=True, text=True)
         if proc.returncode or not proc.stdout.strip():
-            raise RuntimeError(f"gateway.token_cmd liefert keinen Key: {proc.stderr.strip() or 'leere Ausgabe'}")
+            raise RuntimeError(f"gateway.token_cmd returned no key: {proc.stderr.strip() or 'empty output'}")
         return proc.stdout.strip()
     if gw.get("token_env"):
         token = os.environ.get(gw["token_env"], "").strip()
         if not token:
-            raise RuntimeError(f"Umgebungsvariable {gw['token_env']} (gateway.token_env) ist nicht gesetzt")
+            raise RuntimeError(f"Environment variable {gw['token_env']} (gateway.token_env) is not set")
         return token
     if gw.get("token"):
         return str(gw["token"]).strip()
-    raise RuntimeError("gateway braucht token_cmd, token_env oder token")
+    raise RuntimeError("gateway needs token_cmd, token_env or token")
 
 
 def claude_env(cfg: dict) -> dict:
@@ -519,7 +521,7 @@ def claude_env(cfg: dict) -> dict:
 
 _MODELS: dict = {"zeit": 0.0, "liste": []}
 MODELS_TTL_S = 600
-PROVIDERS = {"hosted_vllm": "Intern gehostet", "bedrock": "AWS Bedrock", "azure": "Azure",
+PROVIDERS = {"hosted_vllm": "Self-hosted", "bedrock": "AWS Bedrock", "azure": "Azure",
              "vertex_ai": "Google Cloud", "mistral": "Mistral"}
 
 
@@ -540,7 +542,7 @@ def gateway_models(cfg: dict, refresh: bool = False) -> list[dict]:
             with urllib.request.urlopen(req, timeout=15) as res:
                 data = json.load(res)["data"]
         except Exception:
-            log.exception("Modellliste vom Gateway nicht abrufbar")
+            log.exception("Model list could not be fetched from the gateway")
             return _MODELS["liste"]
         models = []
         for m in data:
@@ -550,7 +552,7 @@ def gateway_models(cfg: dict, refresh: bool = False) -> list[dict]:
             backend = (m.get("litellm_params") or {}).get("model", "").split("/")[0]
             models.append({
                 "id": m["model_name"],
-                "anbieter": PROVIDERS.get(backend, backend or "unbekannt"),
+                "anbieter": PROVIDERS.get(backend, backend or "unknown"),
                 "intern": backend == "hosted_vllm",
                 "input": info.get("input_cost_per_token") or 0.0,
                 "output": info.get("output_cost_per_token") or 0.0,
@@ -600,13 +602,13 @@ def analyze(cfg: dict, meta: dict, body: str, names: dict | None = None, termine
     meta, body = rename_speakers(meta, body, names)
     recorded = meta.get("Recorded At") or meta.get("recorded_at") or ""
     prompt = (
-        f"Aufnahmedatum: {recorded}\n"
-        f"Quelle: {meta.get('Source App', 'unbekannt')}\n"
-        f"Sprecher: {', '.join(map(str, meta.get('Speakers') or []))}\n"
+        f"Recording date: {recorded}\n"
+        f"Source: {meta.get('Source App', 'unknown')}\n"
+        f"Speakers: {', '.join(map(str, meta.get('Speakers') or []))}\n"
         f"{termin_prompt(termine or [], termin_fest)}\n"
-        f"<transkript>\n{body}\n</transkript>"
+        f"<transcript>\n{body}\n</transcript>"
     )
-    result, nutzung = run_claude(cfg, build_system_prompt(cfg), prompt, build_schema(list(cfg["kategorien"])), "Analyse", model)
+    result, nutzung = run_claude(cfg, build_system_prompt(cfg), prompt, build_schema(list(cfg["kategorien"])), "Analysis", model)
     return canonical_names(cfg, result), nutzung
 
 
@@ -629,10 +631,10 @@ def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
     proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=600, cwd=HERE,
                           env=claude_env(cfg))
     if proc.returncode != 0:
-        raise RuntimeError(f"claude fehlgeschlagen ({proc.returncode}): {proc.stderr or proc.stdout}")
+        raise RuntimeError(f"claude failed ({proc.returncode}): {proc.stderr or proc.stdout}")
     out = json.loads(proc.stdout)
     if out.get("is_error") or not out.get("structured_output"):
-        raise RuntimeError(f"Keine strukturierte Antwort: {out.get('result')}")
+        raise RuntimeError(f"No structured response: {out.get('result')}")
     nutzung = usage_of(cfg, out, time.monotonic() - started, model)
     log.info("%s mit %s: %d+%d Tokens, $%.4f, %.0f s", label, model, nutzung["tokens_ein"], nutzung["tokens_aus"],
              nutzung["kosten_usd"], nutzung["sekunden"])
@@ -642,9 +644,9 @@ def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
 FOLLOWUP_SCHEMA = {
     "type": "object",
     "properties": {
-        "betreff": {"type": "string", "description": "Kurzer Betreff ohne 'Re:' / 'AW:'"},
+        "betreff": {"type": "string", "description": "Short subject without 'Re:' / 'AW:'"},
         "text": {"type": "string", "minLength": 80,
-                 "description": "Mailtext als reiner Text (kein Markdown-Fettdruck), mit Anrede und Gruß"},
+                 "description": "Mail body as plain text (no Markdown bold), with salutation and sign-off"},
     },
     "required": ["betreff", "text"],
 }
@@ -656,24 +658,26 @@ def followup(cfg: dict, result: dict, teilnehmer: list[str], anrede: str = "du",
     ich = cfg["ich"]
     en = sprache == "en"
     form = ("informal, first names" if anrede == "du" else "formal") if en else \
-           ("per Du, Vornamen" if anrede == "du" else "per Sie, förmlich")
-    system = f"""Du schreibst für {ich}{role(cfg)} eine kurze Follow-up-Mail an die Teilnehmer eines Gesprächs.
-Sprache: {"Englisch" if en else "Deutsch"}. Ansprache: {form}.
-Aufbau: Anrede an die Teilnehmer, ein Satz Dank/Bezug, die wichtigsten Ergebnisse in 2–5 Stichpunkten
-(Zeilen mit "- "), getroffene Entscheidungen, dann die nächsten Schritte mit Verantwortlichen und Terminen,
-kurzer Abschluss, Gruß mit "{ich}".
-Reiner Text ohne Markdown-Fettdruck oder Überschriften. Sachlich, knapp, keine Floskeln.
-Nur Inhalte aufnehmen, die für die Teilnehmer bestimmt sind: keine internen Bewertungen, Gehälter,
-Personalthemen oder Vermutungen über Personen. Termine als Datum (z. B. 16.10.) nennen."""
+           ('informal: address the recipients with "du", first names' if anrede == "du"
+            else 'formal: address the recipients with "Sie"')
+    system = f"""You write a short follow-up mail for {ich}{role(cfg)} to the participants of a conversation.
+Language of the mail: {"English" if en else "German"}. Tone/form of address: {form}.
+Structure: salutation to the participants, one sentence of thanks/reference, the most important results in 2-5 bullet points
+(lines starting with "- "), decisions made, then the next steps with responsible people and dates,
+short closing, sign-off with "{ich}".
+Plain text without Markdown bold or headings. Factual, concise, no platitudes.
+Only include content meant for the participants: no internal assessments, salaries,
+personnel topics or speculation about people. Give dates as a date (e.g. {"10/16" if en else "16.10."}).
+The input below (summary, decisions, todos) may be in a different language; write the mail in the language stated above."""
     todos = "\n".join(
-        f"- {t['aufgabe']} – {ich if t['ist_meins'] else (t.get('verantwortlich') or 'offen')}"
-        + (f", bis {t['faellig']}" if t.get("faellig") else "") + (" (bereits erledigt)" if t.get("erledigt") else "")
+        f"- {t['aufgabe']} - {ich if t['ist_meins'] else (t.get('verantwortlich') or 'open')}"
+        + (f", due {t['faellig']}" if t.get("faellig") else "") + (" (already done)" if t.get("erledigt") else "")
         for t in result.get("todos", []))
-    prompt = (f"Titel: {result['titel']}\n"
-              f"Teilnehmer: {', '.join(teilnehmer) or 'unbekannt'}\n\n"
-              f"Zusammenfassung:\n{result['zusammenfassung']}\n\n"
-              f"Entscheidungen:\n" + ("\n".join(f"- {e}" for e in result.get("entscheidungen", [])) or "keine") + "\n\n"
-              f"Todos:\n{todos or 'keine'}")
+    prompt = (f"Title: {result['titel']}\n"
+              f"Participants: {', '.join(teilnehmer) or 'unknown'}\n\n"
+              f"Summary:\n{result['zusammenfassung']}\n\n"
+              f"Decisions:\n" + ("\n".join(f"- {e}" for e in result.get("entscheidungen", [])) or "none") + "\n\n"
+              f"Todos:\n{todos or 'none'}")
     return run_claude(cfg, system, prompt, FOLLOWUP_SCHEMA, "Follow-up", model)
 
 
@@ -811,9 +815,9 @@ def write_note(path: Path, cfg: dict, result: dict, reviewed: bool = False, name
 def process(path: Path, cfg: dict, dry_run: bool) -> None:
     meta, body = split_frontmatter(path.read_text())
     if meta.get("kunde"):
-        log.info("Übersprungen (schon verarbeitet): %s", path.name)
+        log.info("Skipped (already processed): %s", path.name)
         return
-    log.info("Analysiere: %s", path.name)
+    log.info("Analyzing: %s", path.name)
     result, _ = analyze(cfg, meta, body)
     if dry_run:
         dest = target_path(cfg, meta, result)
@@ -832,9 +836,9 @@ def pending_files(cfg: dict) -> list[Path]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("files", nargs="*", type=Path, help="Einzelne Dateien statt der ganzen Inbox")
+    ap.add_argument("files", nargs="*", type=Path, help="Individual files instead of the whole inbox")
     ap.add_argument("--config", type=Path, default=HERE / "config.yaml")
-    ap.add_argument("--dry-run", action="store_true", help="Nur anzeigen, nichts schreiben/verschieben")
+    ap.add_argument("--dry-run", action="store_true", help="Only show, do not write/move anything")
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
@@ -845,7 +849,7 @@ def main() -> int:
         try:
             process(path, cfg, args.dry_run)
         except Exception:
-            log.exception("Fehler bei %s", path)
+            log.exception("Error processing %s", path)
             failed += 1
     return 1 if failed else 0
 

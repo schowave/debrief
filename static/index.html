@@ -597,7 +597,7 @@ function store_get(k) { try { return JSON.parse(localStorage.getItem(k)); } catc
 const loc = () => LANG === "en" ? "en-GB" : "de-DE";
 function t(key, vars) {
   if (key == null) return key;
-  let s = (LANG === "en" && EN[key]) || key.replace(/@@.*$/, "");
+  let s = (LANG === "en" && EN[key]) || (LANG === "de" && DE[key]) || key.replace(/@@.*$/, "");
   if (vars) s = s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
   return s;
 }

@@ -3,14 +3,13 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6", "watchdog>=4"]
 # ///
-"""Review-Oberfläche für MacWhisper-Transkripte.
+"""Review UI for MacWhisper transcripts.
 
-Überwacht den Inbox-Ordner, lässt neue Transkripte analysieren und legt das Ergebnis
-als Vorschlag in `pending/` ab. Auf http://<review.host>:<port> lassen sich Kategorie,
-Projekt, Zusammenfassung und Todos prüfen und ändern; erst „Ablegen“ schreibt die
-Notiz in den Vault.
+Watches the inbox folder, has new transcripts analyzed and stores the result as a
+proposal in `pending/`. On http://<review.host>:<port> you can check and change category,
+project, summary and todos; only “File” writes the note to the vault.
 
-Aufruf:  uv run --script server.py [--config config.yaml]
+Usage:  uv run --script server.py [--config config.yaml]
 """
 
 from __future__ import annotations
@@ -172,7 +171,7 @@ class Store:
                 item.update(id=self.item_id(dest), datei=dest.name, frueher=old_id)
                 self.put(item)
                 self.delete(old_id)
-        log.info("Umbenannt (Name für nächsten Export frei): %s → %s", src.name, dest.name)
+        log.info("Renamed (name free for the next export): %s → %s", src.name, dest.name)
         return dest
 
     def _scan(self) -> None:
@@ -209,7 +208,7 @@ class Store:
                    if is_dup and not too_short else {}),
             })
             if is_dup and not too_short:
-                log.info("Mögliches Duplikat (%.0f %%) von %s: %s", dup_sim * 100, dup["titel"], src.name)
+                log.info("Possible duplicate (%.0f %%) of %s: %s", dup_sim * 100, dup["titel"], src.name)
                 continue
             if not too_short:
                 termine = calendar_candidates(self.cfg, meta)
@@ -217,7 +216,7 @@ class Store:
                 item.update(termine=termine, termin_index=0 if termine else None)
                 self.put(item)
             if too_short:
-                log.info("Zu kurz (%d Wörter), nicht analysiert: %s", words, src.name)
+                log.info("Too short (%d words), not analyzed: %s", words, src.name)
             else:
                 self.jobs.put(item_id)
         # transcript was removed from the inbox by hand -> discard proposal
@@ -251,7 +250,7 @@ class Store:
                     "ziel": dup.get("ziel"), "url": obsidian_url(self.cfg, Path(dup["ziel"])) if dup.get("ziel") else None},
                    *load_json_list(DUPLIKATE)][:50]
         DUPLIKATE.write_text(json.dumps(entries, ensure_ascii=False, indent=1))
-        log.info("Duplikat (%.0f %%) von %s verworfen: %s", sim * 100, dup["titel"], src.name)
+        log.info("Duplicate (%.0f %%) of %s discarded: %s", sim * 100, dup["titel"], src.name)
         en = self.cfg.get("sprache") == "en"
         self.notify_text("Duplicate discarded" if en else "Duplikat verworfen",
                          f"{src.stem} matches “{dup['titel']}” – moved to the trash" if en
@@ -262,9 +261,9 @@ class Store:
         try:
             added = index_vault(self.cfg)
             if added:
-                log.info("Fingerabdrücke für %d abgelegte Notizen erfasst", added)
+                log.info("Fingerprints recorded for %d filed notes", added)
         except Exception:
-            log.exception("Vault-Index für Duplikate fehlgeschlagen")
+            log.exception("Vault index for duplicates failed")
         for item in self.all():  # resume analyses left unfinished after a restart
             if item["status"] == "analysiere":
                 self.jobs.put(item["id"])
@@ -273,7 +272,7 @@ class Store:
             try:
                 self.scan()
             except Exception:
-                log.exception("Fehler beim Prüfen der Inbox")
+                log.exception("Error while checking the inbox")
             self.wake.wait(self.next_due())
             self.wake.clear()
 
@@ -283,7 +282,7 @@ class Store:
             from watchdog.events import FileSystemEventHandler
             from watchdog.observers import Observer
         except ImportError:
-            log.warning("watchdog fehlt – Inbox wird nur alle %d s geprüft", FALLBACK_S)
+            log.warning("watchdog missing – inbox is only checked every %d s", FALLBACK_S)
             return
         store = self
 
@@ -296,7 +295,7 @@ class Store:
         observer.schedule(Handler(), str(self.inbox), recursive=False)
         observer.daemon = True
         observer.start()
-        log.info("Inbox wird per Dateisystem-Ereignis überwacht")
+        log.info("Inbox is watched via file system events")
 
     def next_due(self) -> float:
         """Seconds until a file is old enough to be renamed or analyzed (otherwise safety check)."""
@@ -318,7 +317,7 @@ class Store:
             try:
                 item = self.get(item_id)
                 meta, body = split_frontmatter(self.source(item).read_text())
-                log.info("Analysiere: %s", item["datei"])
+                log.info("Analyzing: %s", item["datei"])
                 fixed = item.get("termin_manuell", False)
                 if not fixed:  # search for appointments anew on every analysis (calendar or lead time may have changed)
                     item["termine"] = calendar_candidates(self.cfg, meta)
@@ -340,7 +339,7 @@ class Store:
             except KeyError:
                 continue
             except Exception as e:
-                log.exception("Analyse fehlgeschlagen: %s", item_id)
+                log.exception("Analysis failed: %s", item_id)
                 try:
                     item = self.get(item_id)
                     item.update(status="fehler", fehler=str(e)[:2000])
@@ -368,13 +367,13 @@ class Store:
             if NOTIFIER:  # clicking the notification opens the review page
                 out = subprocess.run([NOTIFIER, "-title", title, "-message", msg, "-open", url, "-sound", "Glass",
                                       "-group", group], capture_output=True, text=True, timeout=10)
-                log.info("Mitteilung über %s (rc=%s) %s", NOTIFIER, out.returncode, (out.stderr or out.stdout).strip())
+                log.info("Notification via %s (rc=%s) %s", NOTIFIER, out.returncode, (out.stderr or out.stdout).strip())
             else:  # fallback without click action
-                log.info("Mitteilung über osascript (terminal-notifier nicht gefunden)")
+                log.info("Notification via osascript (terminal-notifier not found)")
                 subprocess.run(["osascript", "-e", f"display notification {json.dumps(msg, ensure_ascii=False)} "
                                 f"with title \"{title}\" sound name \"Glass\""], timeout=10, check=False)
         except Exception:
-            log.exception("Mitteilung fehlgeschlagen")
+            log.exception("Notification failed")
 
 
 def apply_additions(cfg: dict, body: dict) -> None:
@@ -401,7 +400,7 @@ def check_model(cfg: dict, model: str) -> str:
     model = str(model).strip()
     known = [m["id"] for m in gateway_models(cfg)]
     if not model or (known and model not in known):
-        raise ValueError(f"Unbekanntes Modell: {model}")
+        raise ValueError(f"Unknown model: {model}")
     return model
 
 
@@ -465,26 +464,26 @@ def validate_config(text: str) -> None:
         tmp.write_text(text)
         cfg = load_config(tmp)
     except yaml.YAMLError as e:
-        raise ValueError(f"YAML-Fehler: {e}") from e
+        raise ValueError(f"YAML error: {e}") from e
     except (KeyError, TypeError) as e:
-        raise ValueError(f"Pflichtfeld fehlt oder ist ungültig: {e}") from e
+        raise ValueError(f"Required field missing or invalid: {e}") from e
     finally:
         tmp.unlink(missing_ok=True)
     for key in ("vault", "inbox", "ich", "unklar_ordner"):
         if not cfg.get(key):
-            raise ValueError(f"„{key}“ fehlt")
+            raise ValueError(f"“{key}” is missing")
     if not (cfg["vault"] / cfg["inbox"]).is_dir():
-        raise ValueError(f"Inbox-Ordner nicht gefunden: {cfg['vault'] / cfg['inbox']}")
+        raise ValueError(f"Inbox folder not found: {cfg['vault'] / cfg['inbox']}")
     port = cfg.get("review", {}).get("port", 8765)
     if not isinstance(port, int) or not 1024 <= port <= 65535:
-        raise ValueError("review.port muss eine Zahl zwischen 1024 und 65535 sein")
+        raise ValueError("review.port must be a number between 1024 and 65535")
 
 
 def restart_later(delay: float = 0.5) -> None:
     """Restart the server process (load new config.yaml) after the response has been sent."""
     def go():
         time.sleep(delay)
-        log.info("Neustart nach Änderung der Konfiguration")
+        log.info("Restarting after configuration change")
         logging.shutdown()
         os.execv(sys.executable, [sys.executable, *sys.argv])
     threading.Thread(target=go, daemon=True).start()
@@ -529,7 +528,7 @@ def make_handler(store: Store):
             if not self.headers.get("Content-Type", "").startswith("application/json") or (
                 origin and origin != f"http://{self.headers.get('Host')}"
             ):
-                raise PermissionError("Ungültige Anfrage")
+                raise PermissionError("Invalid request")
             length = int(self.headers.get("Content-Length") or 0)
             return json.loads(self.rfile.read(length) or b"{}")
 
@@ -617,9 +616,9 @@ def make_handler(store: Store):
                 elif path == "/api/config.yaml":
                     self.send_json({"yaml": (HERE / "config.yaml").read_text()})
                 else:
-                    self.send_json({"fehler": "Nicht gefunden"}, HTTPStatus.NOT_FOUND)
+                    self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
             except (KeyError, FileNotFoundError):
-                self.send_json({"fehler": "Nicht gefunden"}, HTTPStatus.NOT_FOUND)
+                self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
             except PermissionError as e:
                 self.send_json({"fehler": str(e)}, HTTPStatus.FORBIDDEN)
 
@@ -636,7 +635,7 @@ def make_handler(store: Store):
                     if body["ergebnis"]["kategorie"] != vorschlag:
                         body["ergebnis"]["begruendung"] = f"Manuell zugeordnet (Vorschlag war: {vorschlag})."
                     if body["ergebnis"]["kategorie"] not in cfg["kategorien"]:
-                        raise ValueError("Bitte eine Kategorie wählen")
+                        raise ValueError("Please choose a category")
                     names = {k: v for k, v in (body.get("sprecher_namen") or {}).items() if k in item.get("sprecher", [])}
                     if termin := chosen_termin(item):
                         body["ergebnis"]["termin"] = termin["titel"]
@@ -645,7 +644,7 @@ def make_handler(store: Store):
                         dest = write_note(store.source(item), cfg, body["ergebnis"], reviewed=True, names=names)
                         store.delete(item["id"])
                     rel = dest.relative_to(cfg["vault"].resolve())
-                    log.info("Abgelegt: %s", rel)
+                    log.info("Filed: %s", rel)
                     remember(item, body["ergebnis"], names)
                     if item.get("fp"):
                         add_fingerprint(item["fp"], body["ergebnis"]["titel"], str(rel))
@@ -678,7 +677,7 @@ def make_handler(store: Store):
                         item = store.get(m[1])
                         idx = body.get("index")
                         if idx is not None and not 0 <= int(idx) < len(item.get("termine") or []):
-                            raise ValueError("Unbekannter Termin")
+                            raise ValueError("Unknown appointment")
                         item["termin_index"] = None if idx is None else int(idx)
                         item["termin_manuell"] = True
                         store.put(item)
@@ -705,18 +704,18 @@ def make_handler(store: Store):
                     with store.lock:
                         trashed = move_to_trash(store.source(item))
                         store.delete(item["id"])
-                    log.info("Verworfen (Papierkorb): %s", item["datei"])
+                    log.info("Discarded (trash): %s", item["datei"])
                     self.send_json({"papierkorb": trashed.name, "datei": item["datei"], "state": self.state()})
                 elif path == "/api/wiederherstellen":
                     src = TRASH / Path(body["papierkorb"]).name
                     dest = store.inbox / Path(body["datei"]).name
                     if not src.exists() or dest.exists():
-                        raise ValueError("Wiederherstellen nicht möglich")
+                        raise ValueError("Restore not possible")
                     shutil.move(str(src), dest)
                     self.send_json(self.state())
                 elif path == "/api/import":
                     names = [importer.to_inbox(cfg, Path(i)) for i in body["ids"]]
-                    log.info("Importiert: %s", ", ".join(names))
+                    log.info("Imported: %s", ", ".join(names))
                     store.scan()  # pick up immediately instead of waiting for the next pass
                     self.send_json({"importiert": names, "state": self.state()})
                 elif path == "/api/import/hochladen":
@@ -727,7 +726,7 @@ def make_handler(store: Store):
                         except ValueError as e:
                             fehler.append(str(e))
                     if names:
-                        log.info("Hochgeladen: %s", ", ".join(names))
+                        log.info("Uploaded: %s", ", ".join(names))
                         store.scan()
                     self.send_json({"importiert": names, "fehler": fehler, "state": self.state()})
                 elif path == "/api/import/ordner-waehlen":
@@ -741,14 +740,14 @@ def make_handler(store: Store):
                     self.send_json({"ordner": ordner})
                 elif path == "/api/modell":
                     set_default_model(cfg, HERE / "config.yaml", check_model(cfg, body["modell"]))
-                    log.info("Standardmodell: %s", cfg["model"])
+                    log.info("Default model: %s", cfg["model"])
                     self.send_json(self.state())
                 elif path == "/api/korrekturen/speichern":
                     data = load_gelernt()
                     k = data["korrekturen"][int(body["index"])]
                     richtig = body["richtig"]
                     if richtig.get("kategorie") not in cfg["kategorien"]:
-                        raise ValueError("Unbekannte Kategorie")
+                        raise ValueError("Unknown category")
                     k["richtig"] = {key: (str(richtig.get(key) or "").strip() or None)
                                     for key in ("kategorie", "projekt", "person")}
                     save_gelernt(data)
@@ -764,7 +763,7 @@ def make_handler(store: Store):
                     entry = entries[int(body["index"])]
                     src, dest = TRASH / Path(entry["papierkorb"]).name, store.inbox / Path(entry["datei"]).name
                     if not src.exists() or dest.exists():
-                        raise ValueError("Nicht mehr im Papierkorb oder Datei existiert schon in der Inbox")
+                        raise ValueError("No longer in the trash, or file already exists in the inbox")
                     meta, text = split_frontmatter(src.read_text())
                     data = load_fingerprints()  # restored = intended, do not treat as a duplicate again
                     data["erlaubt"] = [*data["erlaubt"], fingerprint(text, [str(x) for x in meta.get("Speakers") or []], meta)["hash"]][-200:]
@@ -786,7 +785,7 @@ def make_handler(store: Store):
                     tmp = target.with_suffix(".tmp")
                     tmp.write_text(body["yaml"])
                     tmp.replace(target)
-                    log.info("config.yaml geändert (Sicherung: config.yaml.bak)")
+                    log.info("config.yaml changed (backup: config.yaml.bak)")
                     self.send_json({"neustart": True})
                     restart_later()
                 elif path == "/api/korrekturen/loeschen":
@@ -801,17 +800,17 @@ def make_handler(store: Store):
                     save_kategorien(cfg, yaml.safe_load(body["yaml"]) or {})
                     self.send_json(self.state())
                 else:
-                    self.send_json({"fehler": "Nicht gefunden"}, HTTPStatus.NOT_FOUND)
+                    self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
             except PermissionError as e:
                 self.send_json({"fehler": str(e)}, HTTPStatus.FORBIDDEN)
             except (KeyError, FileNotFoundError):
-                self.send_json({"fehler": "Nicht gefunden (schon abgelegt?)"}, HTTPStatus.NOT_FOUND)
+                self.send_json({"fehler": "Not found (already filed?)"}, HTTPStatus.NOT_FOUND)
             except IndexError:
-                self.send_json({"fehler": "Eintrag nicht gefunden – Seite neu laden"}, HTTPStatus.BAD_REQUEST)
+                self.send_json({"fehler": "Entry not found – reload the page"}, HTTPStatus.BAD_REQUEST)
             except (ValueError, yaml.YAMLError) as e:
                 self.send_json({"fehler": str(e)}, HTTPStatus.BAD_REQUEST)
             except Exception as e:
-                log.exception("Fehler bei %s", path)
+                log.exception("Error at %s", path)
                 self.send_json({"fehler": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR)
             finally:
                 store.notify_change()  # update open pages (SSE)
@@ -833,7 +832,7 @@ def main() -> None:
 
     port = cfg.get("review", {}).get("port", 8765)
     server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(store))
-    log.info("Review-Seite: %s", review_url(cfg))
+    log.info("Review page: %s", review_url(cfg))
     server.serve_forever()
 
 

@@ -150,14 +150,14 @@ def search(cfg: dict, query: str, known_hashes: set[str], limit: int = 200) -> d
 
 def preview(cfg: dict, path: Path) -> str:
     if not allowed(cfg, path):
-        raise PermissionError("Datei liegt nicht in einem Import-Ordner")
+        raise PermissionError("File is not in an import folder")
     return read(path)[1]
 
 
 def to_inbox(cfg: dict, path: Path) -> str:
     """Put a copy with MacWhisper-like frontmatter into the inbox; returns the file name."""
     if not allowed(cfg, path):
-        raise PermissionError("Datei liegt nicht in einem Import-Ordner")
+        raise PermissionError("File is not in an import folder")
     meta, body, speakers = read(path)
     return write_inbox(cfg, path.stem, meta, body, speakers, recorded_at(meta, path), str(path))
 
@@ -166,12 +166,12 @@ def upload_to_inbox(cfg: dict, filename: str, text: str, modified_ms: int | None
     """Put a file uploaded via drag & drop into the inbox."""
     path = Path(Path(filename).name)  # name only, no path from the browser
     if path.suffix.lower() not in ENDUNGEN:
-        raise ValueError(f"{path.name}: nur {', '.join(ENDUNGEN)} werden unterstützt")
+        raise ValueError(f"{path.name}: only {', '.join(ENDUNGEN)} are supported")
     if len(text.encode()) > MAX_BYTES:
-        raise ValueError(f"{path.name}: zu groß")
+        raise ValueError(f"{path.name}: too large")
     meta, body, speakers = parse(text, path.suffix)
     if not body.strip():
-        raise ValueError(f"{path.name}: leer")
+        raise ValueError(f"{path.name}: empty")
     modified = dt.datetime.fromtimestamp(modified_ms / 1000) if modified_ms else dt.datetime.now()
     return write_inbox(cfg, path.stem, meta, body, speakers, recorded_at(meta, path, modified), f"Upload: {path.name}")
 
@@ -201,7 +201,7 @@ def choose_folders() -> list[str]:
     """macOS folder dialog (multiple selection); empty on cancel."""
     import subprocess
     script = ('activate\n'
-              'set picked to choose folder with prompt "Ordner mit Transkripten wählen" with multiple selections allowed\n'
+              'set picked to choose folder with prompt "Choose folder with transcripts" with multiple selections allowed\n'
               'set out to ""\n'
               'repeat with f in picked\n  set out to out & POSIX path of f & linefeed\nend repeat\n'
               'return out')
@@ -209,7 +209,7 @@ def choose_folders() -> list[str]:
     if proc.returncode != 0:  # -128 = cancelled
         if "-128" in proc.stderr:
             return []
-        raise RuntimeError(proc.stderr.strip() or "Ordnerdialog fehlgeschlagen")
+        raise RuntimeError(proc.stderr.strip() or "Folder dialog failed")
     return [line.rstrip("/") for line in proc.stdout.splitlines() if line.strip()]
 
 
@@ -221,11 +221,11 @@ def set_folders(cfg: dict, config_path: Path, ordner: list[str]) -> list[str]:
         if not f:
             continue
         if not Path(f).expanduser().is_dir():
-            raise ValueError(f"Ordner nicht gefunden: {f}")
+            raise ValueError(f"Folder not found: {f}")
         clean.append(f)
     text = config_path.read_text()
     text = re.sub(r"(?ms)^import:\n(?:[ \t]+.*\n|\n)*", "", text).rstrip("\n")
-    block = "\n\n# Ordner mit älteren Transkripten für „Importieren“ auf der Review-Seite\nimport:\n  ordner:\n" \
+    block = "\n\n# Folders with older transcripts for “Import” on the review page\nimport:\n  ordner:\n" \
             + "".join(f"    - {yaml.safe_dump(f, allow_unicode=True).splitlines()[0]}\n" for f in clean)
     config_path.write_text(text + block)
     cfg.setdefault("import", {})["ordner"] = clean

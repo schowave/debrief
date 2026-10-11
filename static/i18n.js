@@ -293,15 +293,20 @@ const EN = {
   "Zurück in der Inbox – wird gleich analysiert": "Back in the inbox – will be analysed shortly",
   "Gespeichert – Dienst startet neu …": "Saved – service is restarting …",
   "Neu gestartet, neue Konfiguration aktiv": "Restarted, new configuration active",
+};
 
-  // Server messages
-  "Nicht gefunden": "Not found",
-  "Nicht gefunden (schon abgelegt?)": "Not found (already filed?)",
-  "Ungültige Anfrage": "Invalid request",
-  "Unbekannter Termin": "Unknown meeting",
-  "Unbekannte Kategorie": "Unknown category",
-  "Wiederherstellen nicht möglich": "Restoring is not possible",
-  "Nicht mehr im Papierkorb oder Datei existiert schon in der Inbox": "No longer in the trash, or the file already exists in the inbox",
-  "Eintrag nicht gefunden – Seite neu laden": "Entry not found – reload the page",
-  "review.port muss eine Zahl zwischen 1024 und 65535 sein": "review.port must be a number between 1024 and 65535",
+// German texts for messages the server sends in English (used when the page language is German).
+const DE = {
+  "Not found": "Nicht gefunden",
+  "Not found (already filed?)": "Nicht gefunden (schon abgelegt?)",
+  "Entry not found – reload the page": "Eintrag nicht gefunden – Seite neu laden",
+  "Invalid request": "Ungültige Anfrage",
+  "File is not in an import folder": "Datei liegt nicht in einem Import-Ordner",
+  "Please choose a category": "Bitte eine Kategorie wählen",
+  "Unknown appointment": "Unbekannter Termin",
+  "Restore not possible": "Wiederherstellen nicht möglich",
+  "Unknown category": "Unbekannte Kategorie",
+  "No longer in the trash, or file already exists in the inbox": "Nicht mehr im Papierkorb oder Datei existiert schon in der Inbox",
+  "Folder dialog failed": "Ordnerdialog fehlgeschlagen",
+  "review.port must be a number between 1024 and 65535": "review.port muss eine Zahl zwischen 1024 und 65535 sein",
 };
