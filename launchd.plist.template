@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Vorlage: install.sh ersetzt die __PLATZHALTER__ und kopiert sie nach ~/Library/LaunchAgents -->
+<!-- Template: install.sh replaces the __PLACEHOLDERS__ and copies it to ~/Library/LaunchAgents -->
 <plist version="1.0">
 <dict>
   <key>Label</key>

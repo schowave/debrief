@@ -44,18 +44,18 @@ from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, is_me, analyze, cale
                        word_count, write_note)
 
 PENDING = HERE / "pending"
-ABGELEGT = HERE / "filed.json"  # Verlauf für „Zuletzt abgelegt“
-DUPLIKATE = HERE / "duplicates.json"  # automatisch verworfene Duplikate (zum Wiederherstellen)
+ABGELEGT = HERE / "filed.json"  # history for "Recently filed"
+DUPLIKATE = HERE / "duplicates.json"  # automatically discarded duplicates (for restoring)
 MAX_ABGELEGT = 30
 TRASH = Path.home() / ".Trash"
 INDEX_HTML = HERE / "static" / "index.html"
 I18N_JS = HERE / "static" / "i18n.js"
-FALLBACK_S = 60  # Sicherheitsprüfung der Inbox, falls ein Dateisystem-Ereignis verloren geht
+FALLBACK_S = 60  # safety check of the inbox in case a filesystem event is lost
 SSE_KEEPALIVE_S = 25
 UNIQUE_RE = re.compile(r" \d{4}-\d{2}-\d{2} \d{2}-\d{2}(?: \(\d+\))?$")
-RENAME_AFTER_S = 2  # Datei muss so lange unverändert sein, bevor sie umbenannt wird
-# Klickbare Mitteilungen; kommt über mise.toml. Die alte Version aus dem Ruby-Gem (rbenv-Shim)
-# ist eine Intel-Binary und löst eine Rosetta-Warnung aus, daher wird sie übergangen.
+RENAME_AFTER_S = 2  # file must stay unchanged this long before it is renamed
+# Clickable notifications; provided via mise.toml. The old version from the Ruby gem (rbenv shim)
+# is an Intel binary and triggers a Rosetta warning, so it is skipped.
 NOTIFIER = next((p for p in [shutil.which("terminal-notifier")] if p and "rbenv" not in p), None)
 
 log = logging.getLogger("debrief.server")
@@ -67,14 +67,14 @@ def review_url(cfg: dict) -> str:
 
 
 class Store:
-    """Vorschläge als JSON-Dateien in `pending/`, eine pro Transkript in der Inbox."""
+    """Proposals as JSON files in `pending/`, one per transcript in the inbox."""
 
     def __init__(self, cfg: dict):
         self.cfg = cfg
         self.lock = threading.RLock()
-        self.scan_lock = threading.Lock()  # Inbox-Prüfung nie parallel (Watcher und Import)
-        self.wake = threading.Event()        # Dateisystem-Ereignis in der Inbox
-        self.changed = threading.Condition()  # Zustand geändert → offene Seiten (SSE) benachrichtigen
+        self.scan_lock = threading.Lock()  # never scan the inbox in parallel (watcher and import)
+        self.wake = threading.Event()        # filesystem event in the inbox
+        self.changed = threading.Condition()  # state changed -> notify open pages (SSE)
         self.version = 0
         self.jobs: queue.Queue[str] = queue.Queue()
         PENDING.mkdir(exist_ok=True)
@@ -124,32 +124,32 @@ class Store:
         items = []
         for p in PENDING.glob("*.json"):
             if not re.fullmatch(r"[0-9a-f]{12}", p.stem):
-                continue  # nur Vorschläge, keine Hilfsdateien
+                continue  # proposals only, no helper files
             try:
                 items.append(json.loads(p.read_text()))
             except (json.JSONDecodeError, FileNotFoundError):
-                continue  # gerade gelöscht/ersetzt
+                continue  # just deleted/replaced
         return sorted(items, key=lambda i: i["erstellt"], reverse=True)
 
     def source(self, item: dict) -> Path:
         return self.inbox / item["datei"]
 
-    # --- Inbox überwachen -------------------------------------------------
+    # --- Watch inbox -------------------------------------------------
 
     def scan(self) -> None:
         with self.scan_lock:
             self._scan()
 
     def make_unique(self, src: Path) -> Path:
-        """MacWhisper exportiert z. B. jede Teams-Aufnahme als „Meeting - Teams.md“. Liegt eine solche Datei noch
-        in der Inbox, würde der nächste Export sie überschreiben bzw. gar nicht exportiert. Deshalb sofort in
-        „<Name> <Aufnahmezeit>.md“ umbenennen – dann ist der Name für den nächsten Export wieder frei."""
+        """MacWhisper exports e.g. every Teams recording as "Meeting - Teams.md". If such a file is still
+        in the inbox, the next export would overwrite it or not be exported at all. So rename it right away to
+        "<Name> <recording time>.md" - then the name is free again for the next export."""
         if UNIQUE_RE.search(src.stem):
             return src
         old_id = self.item_id(src)
         item = self.get(old_id) if self._file(old_id).exists() else None
         if item and item["status"] == "analysiere":
-            return src  # erst nach der laufenden Analyse umbenennen
+            return src  # rename only after the running analysis
         try:
             meta, _ = split_frontmatter(src.read_text())
         except (OSError, yaml.YAMLError):
@@ -168,7 +168,7 @@ class Store:
             dest, n = src.with_name(f"{base} ({n}).md"), n + 1
         with self.lock:
             src.rename(dest)
-            if item:  # vorhandenen Vorschlag mitnehmen; die Seite folgt über „frueher“
+            if item:  # keep the existing proposal; the page follows via "frueher"
                 item.update(id=self.item_id(dest), datei=dest.name, frueher=old_id)
                 self.put(item)
                 self.delete(old_id)
@@ -220,13 +220,13 @@ class Store:
                 log.info("Zu kurz (%d Wörter), nicht analysiert: %s", words, src.name)
             else:
                 self.jobs.put(item_id)
-        # Transkript wurde von Hand aus der Inbox entfernt -> Vorschlag verwerfen
+        # transcript was removed from the inbox by hand -> discard proposal
         for item in self.all():
             if item["id"] not in present:
                 self.delete(item["id"])
 
     def duplicate_of(self, fp: dict, item_id: str) -> tuple[float, dict | None]:
-        """Ähnlichstes abgelegtes oder schon in der Inbox liegendes Transkript (freigegebene ausgenommen)."""
+        """Most similar filed transcript or one already in the inbox (approved ones excluded)."""
         data = load_fingerprints()
         if fp["hash"] in data["erlaubt"] or fp["woerter"] < 20:
             return 0.0, None
@@ -234,7 +234,7 @@ class Store:
         for i in self.all():
             if i["id"] == item_id:
                 continue
-            if not i.get("fp"):  # Vorschläge von vor der Duplikat-Erkennung nachträglich erfassen
+            if not i.get("fp"):  # retroactively capture proposals from before duplicate detection
                 try:
                     meta, body = split_frontmatter(self.source(i).read_text())
                 except FileNotFoundError:
@@ -265,7 +265,7 @@ class Store:
                 log.info("Fingerabdrücke für %d abgelegte Notizen erfasst", added)
         except Exception:
             log.exception("Vault-Index für Duplikate fehlgeschlagen")
-        for item in self.all():  # nach Neustart liegengebliebene Analysen fortsetzen
+        for item in self.all():  # resume analyses left unfinished after a restart
             if item["status"] == "analysiere":
                 self.jobs.put(item["id"])
         self.start_fsevents()
@@ -278,7 +278,7 @@ class Store:
             self.wake.clear()
 
     def start_fsevents(self) -> None:
-        """macOS meldet Änderungen in der Inbox (FSEvents über watchdog) – kein Polling nötig."""
+        """macOS reports changes in the inbox (FSEvents via watchdog) - no polling needed."""
         try:
             from watchdog.events import FileSystemEventHandler
             from watchdog.observers import Observer
@@ -299,7 +299,7 @@ class Store:
         log.info("Inbox wird per Dateisystem-Ereignis überwacht")
 
     def next_due(self) -> float:
-        """Sekunden bis eine Datei alt genug zum Umbenennen bzw. Analysieren ist (sonst Sicherheitsprüfung)."""
+        """Seconds until a file is old enough to be renamed or analyzed (otherwise safety check)."""
         now, due = time.time(), FALLBACK_S
         for src in self.inbox.glob("*.md"):
             try:
@@ -320,7 +320,7 @@ class Store:
                 meta, body = split_frontmatter(self.source(item).read_text())
                 log.info("Analysiere: %s", item["datei"])
                 fixed = item.get("termin_manuell", False)
-                if not fixed:  # Termine bei jeder Analyse neu suchen (Kalender oder Vorlauf können sich geändert haben)
+                if not fixed:  # search for appointments anew on every analysis (calendar or lead time may have changed)
                     item["termine"] = calendar_candidates(self.cfg, meta)
                     self.put(item)
                 chosen = chosen_termin(item)
@@ -328,7 +328,7 @@ class Store:
                 result, nutzung = analyze(self.cfg, meta, body, item.get("sprecher_namen"), termine,
                                           item.get("modell"), termin_fest=fixed)
                 item = self.get(item_id)
-                if not fixed:  # Modell wählt den Termin; ohne gültige Wahl der mit der größten Überschneidung
+                if not fixed:  # model picks the appointment; without a valid choice, the one with the largest overlap
                     idx = result.get("termin_index")
                     valid = isinstance(idx, int) and 0 <= idx < len(item["termine"])
                     item["termin_index"] = idx if valid else (0 if item["termine"] and idx is not None else None)
@@ -365,11 +365,11 @@ class Store:
         if not self.cfg.get("review", {}).get("mitteilung", True):
             return
         try:
-            if NOTIFIER:  # Klick auf die Mitteilung öffnet die Review-Seite
+            if NOTIFIER:  # clicking the notification opens the review page
                 out = subprocess.run([NOTIFIER, "-title", title, "-message", msg, "-open", url, "-sound", "Glass",
                                       "-group", group], capture_output=True, text=True, timeout=10)
                 log.info("Mitteilung über %s (rc=%s) %s", NOTIFIER, out.returncode, (out.stderr or out.stdout).strip())
-            else:  # Fallback ohne Klick-Aktion
+            else:  # fallback without click action
                 log.info("Mitteilung über osascript (terminal-notifier nicht gefunden)")
                 subprocess.run(["osascript", "-e", f"display notification {json.dumps(msg, ensure_ascii=False)} "
                                 f"with title \"{title}\" sound name \"Glass\""], timeout=10, check=False)
@@ -378,7 +378,7 @@ class Store:
 
 
 def apply_additions(cfg: dict, body: dict) -> None:
-    """Neues Projekt / neue Person aus dem Review-Formular in die Kategorien übernehmen."""
+    """Add a new project / person from the review form to the categories."""
     r = body["ergebnis"]
     cat = cfg["kategorien"].get(r["kategorie"])
     if not cat:
@@ -412,7 +412,7 @@ def chosen_termin(item: dict) -> dict | None:
 
 
 def remember(item: dict, final: dict, names: dict) -> None:
-    """Abweichungen von der Modell-Zuordnung und vergebene Sprechernamen für die nächsten Analysen merken."""
+    """Remember deviations from the model assignment and assigned speaker names for the next analyses."""
     keys = ("kategorie", "projekt", "person")
     vorschlag = {k: item["ergebnis"].get(k) for k in keys}
     richtig = {k: final.get(k) for k in keys}
@@ -450,7 +450,7 @@ def add_abgelegt(entry: dict) -> None:
 
 
 def move_to_trash(path: Path) -> Path:
-    """In den macOS-Papierkorb verschieben (wiederherstellbar)."""
+    """Move to the macOS Trash (restorable)."""
     dest, n = TRASH / path.name, 2
     while dest.exists():
         dest, n = TRASH / f"{path.stem} {n}{path.suffix}", n + 1
@@ -459,7 +459,7 @@ def move_to_trash(path: Path) -> Path:
 
 
 def validate_config(text: str) -> None:
-    """Neue config.yaml prüfen, bevor sie die alte ersetzt."""
+    """Validate a new config.yaml before it replaces the old one."""
     tmp = HERE / "config.check.tmp"
     try:
         tmp.write_text(text)
@@ -481,7 +481,7 @@ def validate_config(text: str) -> None:
 
 
 def restart_later(delay: float = 0.5) -> None:
-    """Server-Prozess neu starten (neue config.yaml laden), nachdem die Antwort raus ist."""
+    """Restart the server process (load new config.yaml) after the response has been sent."""
     def go():
         time.sleep(delay)
         log.info("Neustart nach Änderung der Konfiguration")
@@ -524,7 +524,7 @@ def make_handler(store: Store):
             self.wfile.write(raw)
 
         def read_json(self) -> dict:
-            # Nur JSON von der eigenen Seite annehmen (schützt vor Formular-Posts fremder Websites)
+            # Accept only JSON from our own page (protects against form posts from other websites)
             origin = self.headers.get("Origin")
             if not self.headers.get("Content-Type", "").startswith("application/json") or (
                 origin and origin != f"http://{self.headers.get('Host')}"
@@ -534,7 +534,7 @@ def make_handler(store: Store):
             return json.loads(self.rfile.read(length) or b"{}")
 
         def stream_events(self) -> None:
-            """Server-Sent Events: den Zustand bei jeder Änderung an die Seite schicken."""
+            """Server-Sent Events: send the state to the page on every change."""
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.send_header("Cache-Control", "no-cache")
@@ -553,7 +553,7 @@ def make_handler(store: Store):
                     self.wfile.flush()
                     version = store.wait_change(version, SSE_KEEPALIVE_S)
             except (BrokenPipeError, ConnectionResetError, OSError):
-                pass  # Seite geschlossen
+                pass  # page closed
 
         def state(self) -> dict:
             personen = [p for c in cfg["kategorien"].values() for pr in c["projekte"].values() for p in pr["personen"]]
@@ -717,7 +717,7 @@ def make_handler(store: Store):
                 elif path == "/api/import":
                     names = [importer.to_inbox(cfg, Path(i)) for i in body["ids"]]
                     log.info("Importiert: %s", ", ".join(names))
-                    store.scan()  # sofort aufgreifen statt auf den nächsten Durchlauf zu warten
+                    store.scan()  # pick up immediately instead of waiting for the next pass
                     self.send_json({"importiert": names, "state": self.state()})
                 elif path == "/api/import/hochladen":
                     names, fehler = [], []
@@ -766,7 +766,7 @@ def make_handler(store: Store):
                     if not src.exists() or dest.exists():
                         raise ValueError("Nicht mehr im Papierkorb oder Datei existiert schon in der Inbox")
                     meta, text = split_frontmatter(src.read_text())
-                    data = load_fingerprints()  # wiederhergestellt = gewollt, nicht erneut als Duplikat behandeln
+                    data = load_fingerprints()  # restored = intended, do not treat as a duplicate again
                     data["erlaubt"] = [*data["erlaubt"], fingerprint(text, [str(x) for x in meta.get("Speakers") or []], meta)["hash"]][-200:]
                     save_fingerprints(data)
                     shutil.move(str(src), dest)
@@ -814,7 +814,7 @@ def make_handler(store: Store):
                 log.exception("Fehler bei %s", path)
                 self.send_json({"fehler": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR)
             finally:
-                store.notify_change()  # offene Seiten aktualisieren (SSE)
+                store.notify_change()  # update open pages (SSE)
 
     return Handler
 

@@ -1,6 +1,6 @@
-// Debrief Calendar: liefert Termine eines Zeitraums als JSON (für den Debrief).
-//   calendar --auth                     Zugriff anfragen (einmalig, zeigt den macOS-Dialog)
-//   calendar --von <ISO> --bis <ISO>    Termine, die den Zeitraum überschneiden (Ortszeit, yyyy-MM-ddTHH:mm:ss)
+// Debrief Calendar: returns the events of a time range as JSON (for the Debrief).
+//   calendar --auth                     request access (once, shows the macOS dialog)
+//   calendar --von <ISO> --bis <ISO>    events overlapping the time range (local time, yyyy-MM-ddTHH:mm:ss)
 import EventKit
 import Foundation
 

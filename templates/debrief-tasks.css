@@ -1,4 +1,4 @@
-/* Debrief: in Tasks-Abfragen das Fälligkeitsdatum vor dem Text anzeigen */
+/* Debrief: show the due date before the text in Tasks queries */
 .plugin-tasks-list-item .tasks-list-text {
   display: inline-flex;
   flex-wrap: wrap;
@@ -19,15 +19,15 @@
   background: var(--background-modifier-hover);
   color: var(--text-muted);
 }
-/* überfällig rot, heute in Akzentfarbe */
+/* overdue in red, today in accent color */
 .plugin-tasks-list-item[data-task-due^="past"] .task-due,
 .plugin-tasks-list-item .task-due[data-task-due^="past"] { color: var(--text-error); }
 .plugin-tasks-list-item[data-task-due="today"] .task-due,
 .plugin-tasks-list-item .task-due[data-task-due="today"] { color: var(--text-accent); }
 
-/* relative Anzeige */
-/* Tasks markiert Termine bis 7 Tage Abstand (data-task-due = today, past-Nd, future-Nd, sonst *-far).
-   Diese werden relativ angezeigt, weiter entfernte bleiben als Datum. Klick auf die Plakette zeigt/ändert das Datum. */
+/* relative display */
+/* Tasks flags due dates up to 7 days away (data-task-due = today, past-Nd, future-Nd, otherwise *-far).
+   These are shown relatively, dates further away stay as dates. Clicking the badge shows/changes the date. */
 .plugin-tasks-list-item .task-due[data-task-due]:not([data-task-due$="far"]) > span { display: none; }
 .plugin-tasks-list-item .task-due[data-task-due="today"]::before { content: "📅 Heute"; }
 .plugin-tasks-list-item .task-due[data-task-due="future-1d"]::before { content: "📅 Morgen"; }

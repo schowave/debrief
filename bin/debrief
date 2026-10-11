@@ -1,5 +1,5 @@
 #!/bin/sh
-# Startpunkt für den launchd-Dienst. Eigenes Skript statt direkt `mise`, damit macOS den
-# Dienst unter „Anmeldeobjekte → Im Hintergrund erlauben“ als „debrief“ zeigt.
+# Entry point for the launchd service. A separate script instead of calling `mise` directly, so that macOS
+# shows the service as "debrief" under "Login Items → Allow in the Background".
 cd "$(dirname "$0")/.." || exit 1
 exec mise exec -- uv run --script server.py

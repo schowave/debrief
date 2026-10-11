@@ -1,8 +1,8 @@
-// Englische Texte der Review-Seite. Schlüssel = der deutsche Text aus index.html.
-// `@@…` trennt gleiche deutsche Texte mit verschiedener Bedeutung, {name} sind Platzhalter.
-// Fehlt ein Eintrag, zeigt die Seite den deutschen Text.
+// English texts of the review page. Key = the German text from index.html.
+// `@@…` separates identical German texts with different meanings, {name} are placeholders.
+// If an entry is missing, the page shows the German text.
 const EN = {
-  // Kopfzeile, Liste
+  // Header, list
   "Transkript-Review": "Transcript review",
   "Offene Transkripte": "Open transcripts",
   "Ältere Transkripte suchen und importieren": "Search and import older transcripts",
@@ -27,7 +27,7 @@ const EN = {
   "Neue Aufnahmen aus MacWhisper erscheinen hier automatisch.": "New recordings from MacWhisper show up here automatically.",
   "„{x}“ wurde inzwischen anderswo abgelegt oder verworfen": "“{x}” has been filed or discarded elsewhere in the meantime",
 
-  // Datum, Zahlen, Kosten
+  // Date, numbers, costs
   "Heute": "Today",
   "Morgen": "Tomorrow",
   "Freitag": "Friday",
@@ -48,7 +48,7 @@ const EN = {
   "Modell der Analyse": "Model used for the analysis",
   "Kalendertermin": "Calendar event",
 
-  // Modellliste
+  // Model list
   "Keine Modellliste – ohne Gateway wird <code>model</code> aus <code>config.yaml</code> genutzt.": "No model list – without a gateway, <code>model</code> from <code>config.yaml</code> is used.",
   "Modell suchen …": "Search models …",
   "Modell suchen": "Search models",
@@ -59,7 +59,7 @@ const EN = {
   "Trotzdem verwenden": "Use anyway",
   "Standardmodell: {m}": "Default model: {m}",
 
-  // Hauptbereich
+  // Main area
   "Keine Zusammenfassung": "No summary",
   "Das dauert meist 10–40 Sekunden. Die Seite aktualisiert sich von selbst.": "This usually takes 10–40 seconds. The page updates itself.",
   "abgelegt in {a}": "filed in {a}",
@@ -158,7 +158,7 @@ const EN = {
   "Todo entfernt": "Todo removed",
   "Verantwortlich": "Assignee",
 
-  // Sprecher, Termin
+  // Speakers, appointment
   "Im Transkript ist nicht markiert, wer was sagt – MacWhisper hat den Text ohne Sprecher exportiert ({n} Sprecher nur in den Kopfdaten). Namen lassen sich deshalb nicht zuordnen. Abhilfe: in MacWhisper beim Export nach Obsidian die Sprecher im Text mit ausgeben.": "The transcript doesn't mark who says what – MacWhisper exported the text without speakers ({n} speakers only in the metadata), so names can't be assigned. Fix: in MacWhisper, include the speakers in the text when exporting to Obsidian.",
   "Übernehmen": "Apply",
   "Wer ist das?": "Who is this?",
@@ -170,7 +170,7 @@ const EN = {
   "Ohne Termin analysiert bzw. abgelegt.": "Analysed or filed without a meeting.",
   "Mit diesem Termin neu analysieren": "Re-analyse with this meeting",
 
-  // Follow-up-Mail
+  // Follow-up mail
   "Ansprache": "Form of address",
   "Du": "Informal",
   "Sie": "Formal",
@@ -188,7 +188,7 @@ const EN = {
   "Entwurf erstellt ({x})": "Draft created ({x})",
   "Betreff und Text kopiert": "Subject and text copied",
 
-  // Toasts, Aktionen
+  // Toasts, actions
   "In den Papierkorb verschoben": "Moved to the trash",
   "Wiederhergestellt – erscheint gleich wieder": "Restored – will reappear shortly",
   "Rückgängig": "Undo",
@@ -237,7 +237,7 @@ const EN = {
   "Zum Importieren loslassen": "Drop to import",
   ".md- oder .txt-Transkripte – sie landen in der Inbox und werden analysiert": ".md or .txt transcripts – they go to the inbox and get analysed",
 
-  // Tastenkürzel
+  // Keyboard shortcuts
   "In Obsidian ablegen und zum nächsten Transkript": "File to Obsidian and go to the next transcript",
   "Nächstes / vorheriges Transkript": "Next / previous transcript",
   "Kategorie wählen": "Choose category",
@@ -247,7 +247,7 @@ const EN = {
   "Schließen": "Close",
   "Bereiche": "Sections",
 
-  // Einstellungen
+  // Settings
   "Kategorien": "Categories",
   "Modell": "Model",
   "Korrekturen": "Corrections",
@@ -294,7 +294,7 @@ const EN = {
   "Gespeichert – Dienst startet neu …": "Saved – service is restarting …",
   "Neu gestartet, neue Konfiguration aktiv": "Restarted, new configuration active",
 
-  // Meldungen des Servers
+  // Server messages
   "Nicht gefunden": "Not found",
   "Nicht gefunden (schon abgelegt?)": "Not found (already filed?)",
   "Ungültige Anfrage": "Invalid request",

@@ -32,7 +32,7 @@
           stroke-linecap: round; stroke-linejoin: round; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-  /* Kopfzeile */
+  /* Header */
   header { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 56px;
            background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
   header h1 { font-size: 17px; margin: 0; display: flex; align-items: center; gap: 10px; }
@@ -248,7 +248,7 @@
                 background: var(--primary-soft); color: var(--primary); }
   .chip[aria-checked="true"] .sugg { background: rgba(255,255,255,.22); color: inherit; }
 
-  /* Eingaben */
+  /* Inputs */
   .input, .textarea { width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--line);
                       border-radius: 8px; background: var(--surface); transition: border-color .15s; }
   .input:hover, .textarea:hover { border-color: var(--muted); }
@@ -262,7 +262,7 @@
   .newcat label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
   .newcat .row { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
 
-  /* Schalter */
+  /* Switches */
   .switch { display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; padding: 4px 0;
             font-size: 14px; color: var(--muted); text-align: left; }
   .switch .track { width: 36px; height: 22px; border-radius: 99px; background: var(--line); position: relative;
@@ -274,7 +274,7 @@
   .switch[aria-checked="true"] .track { background: var(--primary); }
   .switch[aria-checked="true"] .track::after { transform: translateX(14px); }
 
-  /* Zielpfad */
+  /* Target path */
   .path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 18px; padding: 10px 12px;
           border-radius: 8px; background: var(--surface-2); font-size: 13.5px; }
   .path .seg { display: inline-flex; align-items: center; gap: 5px; }
@@ -351,7 +351,7 @@
   .cal .day[aria-selected="true"] { background: var(--primary); color: var(--on-primary); }
   .cal .foot { display: flex; justify-content: space-between; margin-top: 8px; }
 
-  /* Transkript */
+  /* Transcript */
   details.tr summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px;
                        font-weight: 600; min-height: 32px; }
   details.tr summary::-webkit-details-marker { display: none; }
@@ -360,7 +360,7 @@
   .transcript { white-space: pre-wrap; font-size: 14px; line-height: 1.6; max-height: 520px; overflow: auto;
                 margin: 12px 0 0; padding-right: 8px; }
 
-  /* Aktionsleiste */
+  /* Action bar */
   .actions { position: sticky; bottom: 0; z-index: 10; margin: 8px -32px 0; padding: 14px 32px;
              background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px);
              border-top: 1px solid var(--line); }
@@ -368,7 +368,7 @@
   .actions .wrap { display: flex; flex-wrap: nowrap; gap: 6px; align-items: center; }
   .actions .btn { white-space: nowrap; flex: none; }
   .actions .btn.ghost { padding: 0 12px; }
-  /* wenig Platz: Nebenaktionen nur als Symbol (Tooltip und aria-label bleiben) */
+  /* little space: secondary actions as icon only (tooltip and aria-label remain) */
   @container (max-width: 700px) {
     .actions .btn.ghost .lbl, .actions .btn .kbd { display: none; }
     .actions .btn.ghost { padding: 0 10px; }
@@ -376,7 +376,7 @@
   @container (max-width: 420px) { .actions #save .lbl { display: none; } }
   .actions .spacer { flex: 1; }
 
-  /* Zustände */
+  /* States */
   .state { text-align: center; padding: 72px 20px; color: var(--muted); }
   .state .big { width: 48px; height: 48px; color: var(--primary); margin-bottom: 12px; }
   .state h2 { color: var(--text); font-size: 18px; margin: 0 0 6px; }
@@ -585,9 +585,9 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const icon = (name, cls = "i") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const STATUS = { bereit: "Zu prüfen", analysiere: "Wird analysiert", fehler: "Fehler", uebersprungen: "Übersprungen", zu_kurz: "Sehr kurz", duplikat: "Duplikat?" };
 
-// ---------- Sprache (Deutsch/English) ----------
-// Die deutschen Texte sind die Schlüssel; EN (i18n.js) liefert die englischen. `@@…` am Ende trennt
-// gleiche deutsche Texte mit verschiedener Bedeutung. {name} sind Platzhalter, Werte müssen bei HTML escaped sein.
+// ---------- Language (German/English) ----------
+// The German texts are the keys; EN (i18n.js) provides the English ones. `@@…` at the end separates
+// identical German texts with different meanings. {name} are placeholders, values must be escaped for HTML.
 const LANGS = ["de", "en"];
 let LANG = (() => {
   const saved = store_get("lang");
@@ -601,7 +601,7 @@ function t(key, vars) {
   if (vars) s = s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
   return s;
 }
-// Statische Teile der Seite (Kopfzeile, Dialoge) übersetzen; Originaltexte bleiben erhalten, damit man zurückschalten kann
+// Translate static parts of the page (header, dialogs); original texts are kept so one can switch back
 function translateStatic() {
   const skip = el => el.closest("[data-dyn], script, style, svg, textarea");
   const tr = (de, html) => { const k = html ? de.replace(/\s+/g, " ").trim() : de.trim(); return k && LANG === "en" && EN[k] ? EN[k] : null; };
@@ -649,7 +649,7 @@ let selected = location.hash.slice(1) || null;
 let renderedKey = null;
 const drafts = {};
 
-// ---------- Hilfsfunktionen ----------
+// ---------- Helper functions ----------
 async function api(path, body) {
   const res = await fetch(path, body === undefined ? {} : {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
@@ -694,7 +694,7 @@ async function loadModels(refresh = false) {
 }
 const perMtok = v => v ? nf(v * 1e6, v * 1e6 < 1 ? 2 : 1) + " $" : "0 $";
 function modelMeta(m) {
-  const est = 4000 * m.input + 1500 * m.output;  // grob: eine Analyse ≈ 4k Tokens rein, 1,5k raus
+  const est = 4000 * m.input + 1500 * m.output;  // rough: one analysis ≈ 4k tokens in, 1.5k out
   return (m.input || m.output ? t("Ein {i} · Aus {o} je 1 Mio. Tokens · ca. {c} pro Analyse", { i: perMtok(m.input), o: perMtok(m.output), c: fmtUsd(est) })
                               : t("kostenlos")) + (m.kontext ? " · " + t("{n} Kontext", { n: fmtTokens(m.kontext) }) : "");
 }
@@ -741,7 +741,7 @@ function costLabel(item) {
   return `<span class="cost" title="${esc(u.modell)} · ${esc(t("{a} Tokens rein, {b} raus", { a: nf(u.tokens_ein), b: nf(u.tokens_aus) }))} · ${nf(u.sekunden, 0)} s${
     total !== u.kosten_usd ? ` · ${esc(t("alle Analysen: {x}", { x: fmtUsd(total) }))}` : ""}">${icon("coins")}${fmtUsd(total)} · ${esc(t("{n} Tokens", { n: fmtTokens(u.tokens_ein + u.tokens_aus) }))}</span>`;
 }
-// Minimal-Markdown für die Zusammenfassung: Absätze, Stichpunkte, **fett**, *kursiv*
+// Minimal Markdown for the summary: paragraphs, bullet points, **bold**, *italic*
 function md(text) {
   const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
   const out = []; let list = null, para = [];
@@ -764,13 +764,13 @@ function fmtWhen(item) {
   return isNaN(d) ? s : d.toLocaleString(loc(), { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-// ---------- Zustand ----------
+// ---------- State ----------
 async function refresh() {
-  try { setState(await api("/api/state")); } catch { /* Server startet gerade neu */ }
+  try { setState(await api("/api/state")); } catch { /* server is currently restarting */ }
 }
-const ownGone = new Set();  // selbst abgelegt/verworfen – dann kein „anderswo erledigt“-Hinweis (SSE kann vor der Antwort kommen)
+const ownGone = new Set();  // filed/discarded by ourselves – then no “done elsewhere” notice (SSE can arrive before the response)
 function setState(s) {
-  // Transkript wurde serverseitig umbenannt (eindeutiger Name) → Auswahl und Entwurf mitnehmen
+  // Transcript was renamed on the server (unique name) → carry over selection and draft
   for (const it of s.items) {
     if (!it.frueher) continue;
     const old = "draft:" + it.frueher, saved = store.get(old);
@@ -800,7 +800,7 @@ function select(id) {
   $("#main").focus({ preventScroll: true }); window.scrollTo({ top: 0 });
 }
 
-// ---------- Liste ----------
+// ---------- List ----------
 function renderList() {
   const open = state.items.filter(i => i.status !== "uebersprungen").length;
   $("#count").textContent = open ? t("{n} offen", { n: open }) : "";
@@ -825,7 +825,7 @@ function renderList() {
   $$(".item", list).forEach(b => b.onclick = () => select(b.dataset.id));
 }
 
-// ---------- Entwurf ----------
+// ---------- Draft ----------
 function draftFor(item) {
   if (!drafts[item.id]) {
     const saved = store.get("draft:" + item.id);
@@ -833,7 +833,7 @@ function draftFor(item) {
       ...structuredClone(item.ergebnis), projekt_speichern: false, person_speichern: false, _basis: item.ergebnis.titel,
       sprecher_namen: { ...(item.sprecher_namen || {}) },
     };
-    // Projekt/Person in der Schreibweise der Kategorien (z. B. alter Entwurf „pfk“ → „pFK“)
+    // Project/person in the spelling of the categories (e.g. old draft “pfk” → “pFK”)
     const d = drafts[item.id], cat = state.kategorien[d.kategorie];
     const canon = (name, list) => list.find(x => x.toLowerCase() === (name || "").trim().toLowerCase()) || name;
     if (cat && d.projekt) d.projekt = canon(d.projekt, Object.keys(cat.projekte));
@@ -860,7 +860,7 @@ function folderSegs(d) {
   return segs;
 }
 
-// ---------- Hauptbereich ----------
+// ---------- Main area ----------
 function renderMain(item) {
   const main = $("#main");
   if (!item) {
@@ -1010,7 +1010,7 @@ function renderMain(item) {
     zusBtn.textContent = on ? t("Fertig") : t("Bearbeiten");
     if (on) { autoGrow(zus.parentElement); zus.focus(); } else zusView.innerHTML = md(d.zusammenfassung);
   };
-  zusBtn.onmousedown = e => e.preventDefault();  // Blur des Textfelds nicht vor dem Klick auslösen
+  zusBtn.onmousedown = e => e.preventDefault();  // don't trigger the text field's blur before the click
   zusBtn.onclick = () => zusEdit(zus.hidden);
   zusView.onclick = () => zusEdit(true);
   zusView.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); zusEdit(true); } };
@@ -1022,7 +1022,7 @@ function renderMain(item) {
   $("#sw-proj").onclick = e => { d.projekt_speichern = !d.projekt_speichern; changed(); };
   $("#sw-pers").onclick = e => { d.person_speichern = !d.person_speichern; changed(); };
 
-  // Modus der Freitextfelder: true, wenn „+ Neu“ aktiv ist
+  // Mode of the free-text fields: true when “+ New” is active
   const mode = { proj: !!(d.projekt && !projOf(d)), pers: false };
   mode.pers = !!(d.person && !(projOf(d)?.personen || []).includes(d.person));
   $("#f-proj").value = mode.proj ? d.projekt : "";
@@ -1060,7 +1060,7 @@ function renderMain(item) {
         } });
       $("#pers-custom").hidden = !mode.pers;
       setSwitch($("#sw-pers"), d.person_speichern);
-      // Vorschläge: Eingeladene des Termins und benannte Sprecher, die noch nicht hinterlegt sind
+      // Suggestions: invitees of the appointment and named speakers that are not yet stored
       const known = new Set([...personen, state.ich]);
       const fromMeeting = [...new Set([
         ...terminPeople(item).length <= 15 ? terminPeople(item).map(p => p.name) : [],
@@ -1139,7 +1139,7 @@ function renderMain(item) {
   renderFollowup(item, d);
 }
 
-// ---------- Bausteine ----------
+// ---------- Building blocks ----------
 function chips(box, options, value, onSelect, { add, active = false, onAdd } = {}) {
   box.innerHTML = options.map(o => `<button class="chip" role="radio" data-v="${esc(o.value)}"
       aria-checked="${!active && o.value === value}">${esc(o.label)}${o.sugg ? `<span class="sugg" title="${t("Vorschlag des Modells")}">${t("KI")}</span>` : ""}</button>`).join("")
@@ -1149,7 +1149,7 @@ function chips(box, options, value, onSelect, { add, active = false, onAdd } = {
   all.forEach(b => {
     b.tabIndex = b === checked ? 0 : -1;
     b.onclick = () => b.hasAttribute("data-add") ? onAdd() : onSelect(b.dataset.v);
-    b.onkeydown = e => {  // Pfeiltasten wie bei einer Radiogruppe
+    b.onkeydown = e => {  // arrow keys like in a radio group
       const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
       if (!step) return;
       e.preventDefault();
@@ -1248,7 +1248,7 @@ function renderTodos(item, d) {
   });
 }
 
-// „David“ in der Config, „David Schowalter“ im Transkript → beides bin ich
+// “David” in the config, “David Schowalter” in the transcript → both are me
 const isMe = name => { const n = (name || "").trim().toLowerCase(), me = (state.ich || "").trim().toLowerCase();
   return !!me && (n === me || n.startsWith(me + " ")); };
 
@@ -1257,7 +1257,7 @@ function renderSpeakers(item, d) {
   $("#spr-card").hidden = !speakers.length;
   if (!speakers.length) return;
   const box = $("#speakers");
-  // Ohne Sprechermarkierung im Text (alles ein Absatz) lässt sich niemand zuordnen
+  // Without speaker markers in the text (everything one paragraph) nobody can be assigned
   if (!Object.keys(item.sprecher_proben || {}).length) {
     box.innerHTML = `<p class="empty-hint" style="margin:0">${icon("alert")} ${t("Im Transkript ist nicht markiert, wer was sagt – MacWhisper hat den Text ohne Sprecher exportiert ({n} Sprecher nur in den Kopfdaten). Namen lassen sich deshalb nicht zuordnen. Abhilfe: in MacWhisper beim Export nach Obsidian die Sprecher im Text mit ausgeben.", { n: speakers.length })}</p>`;
     $("#spr-reanalyze").hidden = true;
@@ -1380,7 +1380,7 @@ function renderFollowup(item, d) {
   $("#fu-copy").onclick = async () => {
     const text = `${fu.betreff}\n\n${fu.text}`;
     try { await navigator.clipboard.writeText(text); }
-    catch {  // Fallback ohne Clipboard-API
+    catch {  // fallback without Clipboard API
       const ta = Object.assign(document.createElement("textarea"), { value: text });
       document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
     }
@@ -1505,7 +1505,7 @@ function comboBox(box, value, options, onChange, placeholder = t("Name")) {
   };
 }
 
-// ---------- Aktionen ----------
+// ---------- Actions ----------
 function busy(btn, on) {
   if (!btn) return;
   if (on) { btn.dataset.html = btn.innerHTML; btn.innerHTML = `<span class="spin" aria-hidden="true"></span> ${esc(btn.textContent.trim().split(" ")[0])} …`; btn.disabled = true; }
@@ -1529,7 +1529,7 @@ async function save(item, d) {
     const res = await api(`/api/items/${item.id}/ablegen`, { ergebnis, projekt_speichern, person_speichern, sprecher_namen });
     forget(item.id);
     toastLink(t("Abgelegt in {x}", { x: res.ziel.split("/").slice(0, -1).join("/") }), t("In Obsidian öffnen"), res.url);
-    // zum nächsten offenen Transkript in der Liste springen
+    // jump to the next open transcript in the list
     const ids = new Set(res.state.items.map(i => i.id));
     const next = [...order.slice(pos + 1), ...order.slice(0, pos).reverse()].find(id => ids.has(id) &&
       res.state.items.find(i => i.id === id).status === "bereit");
@@ -1581,7 +1581,7 @@ async function impSearch() {
   $("#imp-list").innerHTML = `<p class="empty-hint" style="padding:12px">${t("Suche …")}</p>`;
   try {
     const res = await api("/api/import/suche?q=" + encodeURIComponent(q));
-    if (seq !== imp.seq) return;  // inzwischen neue Eingabe
+    if (seq !== imp.seq) return;  // new input in the meantime
     imp.dateien = res.dateien;
     imp.ordner = res.ordner;
     if (!res.ordner.length) $("#imp-setup").hidden = false;
@@ -1684,7 +1684,7 @@ $("#imp-go").onclick = async e => {
   busy(btn, false); impRender();
 };
 
-// ---------- Drag & Drop / Dateien hochladen ----------
+// ---------- Drag & drop / file upload ----------
 const ACCEPT = /\.(md|txt)$/i;
 async function uploadFiles(files) {
   files = [...files];
@@ -1717,9 +1717,9 @@ window.addEventListener("drop", e => {
 $("#imp-files").onclick = () => $("#file-pick").click();
 $("#file-pick").onchange = e => { uploadFiles(e.target.files); e.target.value = ""; };
 
-// ---------- Einstellungen ----------
+// ---------- Settings ----------
 const settings = $("#settings");
-const yamlBase = {};  // geladener Stand, um ungespeicherte Änderungen zu erkennen
+const yamlBase = {};  // loaded state, to detect unsaved changes
 const dirty = () => ["cats-yaml", "config-yaml"].some(id => yamlBase[id] !== undefined && $("#" + id).value !== yamlBase[id]);
 
 function showTab(name) {
@@ -1766,7 +1766,7 @@ $$("[data-close]", settings).forEach(b => b.onclick = closeSettings);
 settings.addEventListener("cancel", e => { e.preventDefault(); closeSettings(); });
 settings.onclick = e => { if (e.target === settings) closeSettings(); };
 
-// Kategorien
+// Categories
 $("#cats-save").onclick = async e => {
   const btn = e.currentTarget; busy(btn, true); $("#cats-error").hidden = true;
   try {
@@ -1777,7 +1777,7 @@ $("#cats-save").onclick = async e => {
   busy(btn, false);
 };
 
-// Korrekturen
+// Corrections
 let korrekturen = [];
 function renderKorrekturen(list) {
   korrekturen = list;
@@ -1820,7 +1820,7 @@ function editKorrektur(li, i) {
   };
 }
 
-// Namen
+// Names
 let namen = [];
 function renderNamen(list) {
   namen = list;
@@ -1859,7 +1859,7 @@ $("#name-add").onkeydown = e => {
   e.target.value = ""; saveNamen([...namen, v], t("„{x}“ hinzugefügt", { x: v }));
 };
 
-// Verlauf
+// History
 function renderVerlauf() {
   const list = state.abgelegt || [];
   $("#n-verlauf").textContent = list.length;
@@ -1880,7 +1880,7 @@ confirmButton($("#verlauf-clear"), t("Wirklich leeren?"), async btn => {
   btn.classList.remove("confirm"); btn.innerHTML = icon("trash") + " " + t("Verlauf leeren");
 });
 
-// Duplikate
+// Duplicates
 function renderDuplikate() {
   const list = state.duplikate || [];
   $("#n-dup").textContent = list.length;
@@ -1895,14 +1895,14 @@ function renderDuplikate() {
   });
 }
 
-// Konfiguration
+// Configuration
 $("#config-save").onclick = async e => {
   const btn = e.currentTarget; busy(btn, true); $("#config-error").hidden = true;
   try {
     await api("/api/config.yaml", { yaml: $("#config-yaml").value });
     yamlBase["config-yaml"] = $("#config-yaml").value;
     toast(t("Gespeichert – Dienst startet neu …"));
-    for (let i = 0; i < 30; i++) {   // warten, bis der Server wieder antwortet
+    for (let i = 0; i < 30; i++) {   // wait until the server responds again
       await new Promise(r => setTimeout(r, 700));
       try { await api("/api/state"); toast(t("Neu gestartet, neue Konfiguration aktiv")); break; } catch {}
     }
@@ -1914,15 +1914,15 @@ $("#config-save").onclick = async e => {
 $$("#lang-toggle button").forEach(b => b.onclick = () => setLang(b.dataset.lang));
 translateStatic();
 window.addEventListener("hashchange", () => select(location.hash.slice(1)));
-// Änderungen kommen per Server-Sent Events. Chrome gibt die Verbindung auf, wenn der Server beim
-// Wiederverbinden noch nicht läuft (z. B. Neustart) – dann selbst mit wachsendem Abstand neu verbinden.
+// Changes arrive via Server-Sent Events. Chrome gives up the connection if the server is not yet
+// running when reconnecting (e.g. restart) – then reconnect ourselves with increasing delay.
 let events = null, retryMs = 2000;
 function connectEvents() {
   events = new EventSource("/api/events");
   events.addEventListener("state", e => { try { setState(JSON.parse(e.data)); } catch {} });
   events.onopen = () => { retryMs = 2000; };
   events.onerror = () => {
-    if (events.readyState !== EventSource.CLOSED) return;  // Browser versucht es selbst noch
+    if (events.readyState !== EventSource.CLOSED) return;  // browser is still retrying by itself
     setTimeout(connectEvents, retryMs);
     retryMs = Math.min(retryMs * 2, 15000);
   };

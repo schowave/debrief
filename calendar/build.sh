@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Baut „Debrief Calendar.app“ (eigene App, damit macOS den Kalenderzugriff dauerhaft dieser App zuordnet).
-#   calendar/build.sh <Zielordner>   (Standard: bin/)
+# Builds "Debrief Calendar.app" (a dedicated app, so that macOS permanently attributes calendar access to this app).
+#   calendar/build.sh <target folder>   (default: bin/)
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
 OUT="${1:-$SRC/../bin}"
@@ -21,9 +21,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>LSUIElement</key><true/>
   <key>NSCalendarsFullAccessUsageDescription</key>
-  <string>Der Debrief liest den Termin zur Aufnahmezeit (Titel, Teilnehmer), um Gespräche zuzuordnen.</string>
+  <string>The Debrief reads the calendar event at the time of the recording (title, attendees) to assign conversations.</string>
   <key>NSCalendarsUsageDescription</key>
-  <string>Der Debrief liest den Termin zur Aufnahmezeit (Titel, Teilnehmer), um Gespräche zuzuordnen.</string>
+  <string>The Debrief reads the calendar event at the time of the recording (title, attendees) to assign conversations.</string>
 </dict></plist>
 PLIST
 codesign --force --sign - "$APP"

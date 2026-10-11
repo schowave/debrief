@@ -1,7 +1,7 @@
-# Kategorien: Schlüssel = Wert für das Property `kunde`.
-# `hinweise` helfen dem Modell beim Zuordnen (Personen, Projekte, Begriffe).
-# Projekte landen in `<ordner>/<Projekt>`, betreute Personen in `<ordner>/<Projekt>/<Person>`.
-# Wird auch von der Review-Seite geschrieben (Kommentare gehen dabei verloren).
+# Categories: key = value for the `kunde` property.
+# `hinweise` (hints) help the model with classification (people, projects, terms).
+# Projects go to `<ordner>/<project>`, supervised people to `<ordner>/<project>/<person>`.
+# Also written by the review page (comments are lost in the process).
 acme:
   ordner: Kunden/Acme
   hinweise: Kundenprojekt bei Acme (Plattform-Migration, Architektur-Workshops)

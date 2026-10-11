@@ -1,7 +1,7 @@
-"""Import älterer Transkripte (MacWhisper-Exporte als .md oder .txt) aus Ordnern in die Inbox.
+"""Import older transcripts (MacWhisper exports as .md or .txt) from folders into the inbox.
 
-Die Originale bleiben unverändert: Importieren legt eine Kopie mit MacWhisper-ähnlichem Frontmatter in die
-Inbox, danach läuft der normale Ablauf (Duplikat-Prüfung, Analyse, Review).
+The originals stay unchanged: importing puts a copy with MacWhisper-like frontmatter into the
+inbox, after which the normal flow runs (duplicate check, analysis, review).
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ MAX_BYTES = 3_000_000
 DATE_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})(?:[ _T]+(\d{1,2})[.:\-h](\d{2}))?")
 SPEAKER_LINE = re.compile(r"^[\w.' -]{2,40}$")
 
-_cache: dict[str, tuple[float, dict]] = {}  # Pfad → (mtime, Eintrag)
+_cache: dict[str, tuple[float, dict]] = {}  # path -> (mtime, entry)
 
 
 def folders(cfg: dict) -> list[Path]:
@@ -35,7 +35,7 @@ def allowed(cfg: dict, path: Path) -> bool:
 
 
 def detect_speakers(body: str) -> list[str]:
-    """MacWhisper-Format: Sprechername allein auf einer Zeile, darunter der Text."""
+    """MacWhisper format: speaker name alone on a line, the text below it."""
     lines = [l.strip() for l in body.splitlines()]
     counts: dict[str, int] = {}
     for i, line in enumerate(lines[:-1]):
@@ -74,7 +74,7 @@ def read(path: Path) -> tuple[dict, str, list[str]]:
 
 def parse(text: str, suffix: str) -> tuple[dict, str, list[str]]:
     meta, body = split_frontmatter(text) if suffix.lower() == ".md" else ({}, text)
-    if "## Transkript" in body:  # schon von Debrief abgelegte Notiz
+    if "## Transkript" in body:  # note already filed by Debrief
         body = body.split("## Transkript", 1)[1]
     speakers = [str(s) for s in meta.get("Speakers") or []] or detect_speakers(body)
     return meta, body.strip(), speakers
@@ -109,7 +109,7 @@ def entry(cfg: dict, path: Path, root: Path) -> dict | None:
 
 
 def index(cfg: dict) -> list[dict]:
-    out, seen = [], set()  # Ordner können ineinander liegen
+    out, seen = [], set()  # folders may be nested
     for root in folders(cfg):
         if not root.is_dir():
             continue
@@ -155,7 +155,7 @@ def preview(cfg: dict, path: Path) -> str:
 
 
 def to_inbox(cfg: dict, path: Path) -> str:
-    """Kopie mit MacWhisper-ähnlichem Frontmatter in die Inbox legen; liefert den Dateinamen."""
+    """Put a copy with MacWhisper-like frontmatter into the inbox; returns the file name."""
     if not allowed(cfg, path):
         raise PermissionError("Datei liegt nicht in einem Import-Ordner")
     meta, body, speakers = read(path)
@@ -163,8 +163,8 @@ def to_inbox(cfg: dict, path: Path) -> str:
 
 
 def upload_to_inbox(cfg: dict, filename: str, text: str, modified_ms: int | None) -> str:
-    """Per Drag & Drop hochgeladene Datei in die Inbox legen."""
-    path = Path(Path(filename).name)  # nur der Name, kein Pfad vom Browser
+    """Put a file uploaded via drag & drop into the inbox."""
+    path = Path(Path(filename).name)  # name only, no path from the browser
     if path.suffix.lower() not in ENDUNGEN:
         raise ValueError(f"{path.name}: nur {', '.join(ENDUNGEN)} werden unterstützt")
     if len(text.encode()) > MAX_BYTES:
@@ -192,13 +192,13 @@ def write_inbox(cfg: dict, stem: str, meta: dict, body: str, speakers: list[str]
     while dest.exists():
         dest, n = inbox / f"{name} ({n}).md", n + 1
     dest.write_text("---\n" + yaml.safe_dump(front, sort_keys=False, allow_unicode=True, width=10_000) + "---\n\n" + body + "\n")
-    old = time.time() - 120  # gilt sofort als fertig geschrieben, die Inbox-Prüfung greift beim nächsten Durchlauf
+    old = time.time() - 120  # counts as fully written immediately; the inbox check picks it up on the next pass
     os.utime(dest, (old, old))
     return dest.name
 
 
 def choose_folders() -> list[str]:
-    """macOS-Ordnerdialog (Mehrfachauswahl); leer bei Abbrechen."""
+    """macOS folder dialog (multiple selection); empty on cancel."""
     import subprocess
     script = ('activate\n'
               'set picked to choose folder with prompt "Ordner mit Transkripten wählen" with multiple selections allowed\n'
@@ -206,7 +206,7 @@ def choose_folders() -> list[str]:
               'repeat with f in picked\n  set out to out & POSIX path of f & linefeed\nend repeat\n'
               'return out')
     proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=600)
-    if proc.returncode != 0:  # -128 = abgebrochen
+    if proc.returncode != 0:  # -128 = cancelled
         if "-128" in proc.stderr:
             return []
         raise RuntimeError(proc.stderr.strip() or "Ordnerdialog fehlgeschlagen")
@@ -214,7 +214,7 @@ def choose_folders() -> list[str]:
 
 
 def set_folders(cfg: dict, config_path: Path, ordner: list[str]) -> list[str]:
-    """Import-Ordner prüfen und als `import.ordner` in config.yaml schreiben (übriger Text bleibt unverändert)."""
+    """Validate import folders and write them as `import.ordner` to config.yaml (remaining text stays unchanged)."""
     clean = []
     for f in ordner:
         f = str(f).strip()

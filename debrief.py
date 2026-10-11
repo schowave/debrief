@@ -34,7 +34,7 @@ from pathlib import Path
 import yaml
 
 HERE = Path(__file__).resolve().parent
-MIN_FILE_AGE_S = 20  # MacWhisper soll fertig geschrieben haben
+MIN_FILE_AGE_S = 20  # MacWhisper should have finished writing
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n?", re.DOTALL)
 
 log = logging.getLogger("debrief")
@@ -49,7 +49,7 @@ KATEGORIEN_HEADER = """\
 
 
 def normalize_kategorien(kategorien: dict) -> dict:
-    """Projekte dürfen in der Datei auch nur ein Hinweis-String sein."""
+    """Projects may also be just a hint string in the file."""
     for cat in kategorien.values():
         cat.setdefault("hinweise", "")
         cat["projekte"] = {
@@ -72,7 +72,7 @@ def load_config(path: Path) -> dict:
 
 
 def reload_kategorien(cfg: dict) -> None:
-    """categories.yaml neu einlesen, falls sie seit dem letzten Laden geändert wurde (z. B. von Hand)."""
+    """Re-read categories.yaml if it changed since the last load (e.g. edited by hand)."""
     path = cfg["kategorien_datei"]
     if not path.exists():
         return
@@ -109,7 +109,7 @@ def split_frontmatter(text: str) -> tuple[dict, str]:
     return yaml.safe_load(m.group(1)) or {}, text[m.end():]
 
 
-GELERNT = HERE / "learned.json"  # Korrekturen und Namen aus dem Review (lokal, nicht im Git)
+GELERNT = HERE / "learned.json"  # Corrections and names from the review (local, not in Git)
 MAX_KORREKTUREN_IM_PROMPT = 15
 SPEAKER_RE = re.compile(r"^Speaker \d+$")
 
@@ -129,7 +129,7 @@ def save_gelernt(data: dict) -> None:
 
 
 def is_me(cfg: dict, name: str) -> bool:
-    """„David“ in der Config, „David Schowalter“ im Transkript → beides bin ich."""
+    """\"David\" in the config, \"David Schowalter\" in the transcript → both are me."""
     n, me = str(name or "").strip().casefold(), str(cfg.get("ich", "")).strip().casefold()
     return bool(me) and (n == me or n.startswith(me + " "))
 
@@ -139,13 +139,13 @@ def is_placeholder_speaker(name: str) -> bool:
 
 
 def word_count(body: str, speakers: list[str]) -> int:
-    """Wörter im Transkript ohne die Sprecherzeilen."""
+    """Words in the transcript without the speaker lines."""
     labels = {s.strip() for s in speakers}
     return sum(len(line.split()) for line in body.splitlines() if line.strip() and line.strip() not in labels)
 
 
 def speaker_samples(body: str, speakers: list[str], length: int = 140) -> dict[str, str]:
-    """Erste Aussage jedes Sprechers, damit man ihn beim Benennen erkennt."""
+    """First statement of each speaker, so they can be recognized when naming them."""
     labels, samples, current = {s.strip() for s in speakers}, {}, None
     for line in body.splitlines():
         text = line.strip()
@@ -157,7 +157,7 @@ def speaker_samples(body: str, speakers: list[str], length: int = 140) -> dict[s
 
 
 def rename_speakers(meta: dict, body: str, names: dict[str, str] | None) -> tuple[dict, str]:
-    """Ersetzt Sprecher-Platzhalter („Speaker 1“) in Frontmatter und Transkript durch echte Namen."""
+    """Replaces speaker placeholders (\"Speaker 1\") in frontmatter and transcript with real names."""
     names = {k: v.strip() for k, v in (names or {}).items() if v and v.strip() and v.strip() != k}
     if not names:
         return meta, body
@@ -169,7 +169,7 @@ def rename_speakers(meta: dict, body: str, names: dict[str, str] | None) -> tupl
 
 
 def rename_in_result(result: dict, names: dict[str, str] | None) -> dict:
-    """Sprecher-Platzhalter auch in Zusammenfassung, Entscheidungen und Todos ersetzen."""
+    """Also replace speaker placeholders in summary, decisions and todos."""
     names = {k: v.strip() for k, v in (names or {}).items() if v and v.strip()}
     if not names:
         return result
@@ -195,22 +195,22 @@ def korrekturen_prompt(cfg: dict) -> str:
             + "\n".join(lines))
 
 
-# --- Duplikate ---------------------------------------------------------------
+# --- Duplicates ---------------------------------------------------------------
 
-FINGERABDRUECKE = HERE / "fingerprints.json"  # abgelegte Transkripte (lokal, nicht im Git)
-SKETCH_K = 128      # Größe der Bottom-k-Skizze für die Ähnlichkeit
-SHINGLE = 3         # Wortgruppen-Länge (3 verträgt Abweichungen einer erneuten Transkription)
+FINGERABDRUECKE = HERE / "fingerprints.json"  # filed transcripts (local, not in Git)
+SKETCH_K = 128      # size of the bottom-k sketch for similarity
+SHINGLE = 3         # word group length (3 tolerates deviations of a re-transcription)
 
 
 def transcript_text(body: str, speakers: list[str]) -> str:
-    """Nur der gesprochene Text: Sprecherzeilen raus (die werden ggf. umbenannt), klein, ohne Satzzeichen."""
+    """Spoken text only: speaker lines removed (they may be renamed), lowercase, no punctuation."""
     labels = {str(s).strip() for s in speakers}
     lines = [l for l in body.splitlines() if l.strip() and l.strip() not in labels]
     return " ".join(re.findall(r"\w+", " ".join(lines).lower()))
 
 
 def fingerprint(body: str, speakers: list[str], meta: dict) -> dict:
-    """Exakter Hash plus Bottom-k-Skizze der 3-Wort-Gruppen (≈ Jaccard-Ähnlichkeit)."""
+    """Exact hash plus bottom-k sketch of the 3-word groups (≈ Jaccard similarity)."""
     words = transcript_text(body, speakers).split()
     shingles = {" ".join(words[i:i + SHINGLE]) for i in range(max(1, len(words) - SHINGLE + 1))}
     hashes = sorted({int.from_bytes(hashlib.blake2b(x.encode(), digest_size=8).digest(), "big") for x in shingles})
@@ -258,7 +258,7 @@ def add_fingerprint(fp: dict, titel: str, ziel: str) -> None:
 
 
 def index_vault(cfg: dict) -> int:
-    """Bereits abgelegte Notizen (mit `kunde:` und Abschnitt „## Transkript“) einmalig erfassen."""
+    """Index already filed notes (with `kunde:` and a \"## Transkript\" section) once."""
     data = load_fingerprints()
     known = {n["ziel"] for n in data["notizen"]}
     vault, inbox, added = cfg["vault"].resolve(), (cfg["vault"] / cfg["inbox"]).resolve(), 0
@@ -282,7 +282,7 @@ def index_vault(cfg: dict) -> int:
 
 
 def find_duplicate(fp: dict, others: list[dict]) -> tuple[float, dict | None]:
-    """Ähnlichstes Gegenstück; gleiche Aufnahme (Zeit + Dauer) zählt mindestens als 0,9."""
+    """Most similar counterpart; the same recording (time + duration) counts as at least 0.9."""
     best, match = 0.0, None
     for other in others:
         sim = similarity(fp, other)
@@ -294,11 +294,11 @@ def find_duplicate(fp: dict, others: list[dict]) -> tuple[float, dict | None]:
 
 
 KALENDER_APP = HERE / "bin" / "Debrief Calendar.app"
-MAX_TERMIN_STUNDEN = 4  # längere Einträge (Messen, Urlaub) sind keine Besprechungen
+MAX_TERMIN_STUNDEN = 4  # longer entries (trade fairs, vacation) are not meetings
 
 
 def parse_duration(value) -> int:
-    """MacWhisper-Dauer „38:37“ oder „1:02:03“ in Sekunden."""
+    """MacWhisper duration \"38:37\" or \"1:02:03\" in seconds."""
     try:
         parts = [int(x) for x in str(value).split(":")]
     except ValueError:
@@ -323,9 +323,9 @@ def recording_window(meta: dict) -> tuple[dt.datetime, dt.datetime] | None:
 
 
 def calendar_candidates(cfg: dict, meta: dict) -> list[dict]:
-    """Kalendertermine zur Aufnahme – bester zuerst, leer wenn nichts passt. In Frage kommt ein Termin, wenn die
-    Aufnahme zwischen `vor_beginn_min` vor und `nach_beginn_min` nach seinem Beginn startet oder er beim
-    Aufnahmestart gerade läuft (z. B. langer Workshop)."""
+    """Calendar events for the recording - best first, empty if nothing fits. An event qualifies if the
+    recording starts between `vor_beginn_min` before and `nach_beginn_min` after its start, or if it is
+    already running at recording start (e.g. a long workshop)."""
     window = recording_window(meta)
     if not cfg.get("kalender", True) or not window or not KALENDER_APP.exists():
         return []
@@ -333,12 +333,12 @@ def calendar_candidates(cfg: dict, meta: dict) -> list[dict]:
     fenster = cfg.get("kalender_fenster", {})
     before = dt.timedelta(minutes=fenster.get("vor_beginn_min", 10))
     after = dt.timedelta(minutes=fenster.get("nach_beginn_min", 30))
-    out = HERE / "pending" / f"kalender-{os.getpid()}-{time.monotonic_ns()}.out"  # keine .json: das sind Vorschläge
+    out = HERE / "pending" / f"kalender-{os.getpid()}-{time.monotonic_ns()}.out"  # not .json: those are suggestions
     try:
         subprocess.run(["open", "-W", "-g", "-n", "--stdout", str(out), str(KALENDER_APP), "--args",
                         "--von", (start - dt.timedelta(hours=MAX_TERMIN_STUNDEN)).isoformat(timespec="seconds"),
                         "--bis", (start + before).isoformat(timespec="seconds")], timeout=30, check=False,
-                       stderr=subprocess.DEVNULL)  # „Unable to block on applications“, wenn die App schneller fertig ist
+                       stderr=subprocess.DEVNULL)  # "Unable to block on applications" if the app finishes faster
         data = json.loads(out.read_text() or "[]")
     except Exception:
         log.exception("Kalender nicht lesbar")
@@ -357,7 +357,7 @@ def calendar_candidates(cfg: dict, meta: dict) -> list[dict]:
         running = e_start <= start < e_end
         if not (starts_near or running):
             continue
-        distance = abs((start - e_start).total_seconds())  # je näher am Terminbeginn, desto wahrscheinlicher
+        distance = abs((start - e_start).total_seconds())  # the closer to the event start, the more likely
         scored.append(((bool(e["teilnehmer"]), -distance), e))
     return [e for _, e in sorted(scored, key=lambda x: x[0], reverse=True)][:5]
 
@@ -373,7 +373,7 @@ def termin_line(termin: dict, limit: int) -> str:
 
 
 def termin_prompt(termine: list[dict], fixed: bool = False) -> str:
-    """Kalendertermine als Kontext. `fixed`: vom Nutzer bestätigt, sonst wählt das Modell per `termin_index`."""
+    """Calendar events as context. `fixed`: confirmed by the user, otherwise the model picks via `termin_index`."""
     if not termine:
         return "Kalendertermine zur Aufnahmezeit: keine\n"
     if fixed:
@@ -485,7 +485,7 @@ Antworte auf Deutsch.""" + korrekturen_prompt(cfg)
 
 
 def gateway_token(gw: dict) -> str:
-    """API-Key fürs Gateway: aus `token_cmd`, `token_env` oder direkt aus `token`."""
+    """API key for the gateway: from `token_cmd`, `token_env` or directly from `token`."""
     if gw.get("token_cmd"):
         proc = subprocess.run(gw["token_cmd"], shell=True, capture_output=True, text=True)
         if proc.returncode or not proc.stdout.strip():
@@ -502,7 +502,7 @@ def gateway_token(gw: dict) -> str:
 
 
 def claude_env(cfg: dict) -> dict:
-    """Wie `claude-api` in der .zshrc: Claude Code gegen das konfigurierte Gateway."""
+    """Like `claude-api` in .zshrc: Claude Code against the configured gateway."""
     env = dict(os.environ)
     gw = cfg.get("gateway")
     if not gw:
@@ -524,12 +524,12 @@ PROVIDERS = {"hosted_vllm": "Intern gehostet", "bedrock": "AWS Bedrock", "azure"
 
 
 def role(cfg: dict) -> str:
-    """Optionale Rollenangabe aus `rolle:` für die Prompts, z. B. „ (Berater bei Acme)“."""
+    """Optional role from `rolle:` for the prompts, e.g. \" (consultant at Acme)\"."""
     return f" ({cfg['rolle']})" if cfg.get("rolle") else ""
 
 
 def gateway_models(cfg: dict, refresh: bool = False) -> list[dict]:
-    """Chat-Modelle des LiteLLM-Gateways mit Anbieter, Preisen und Kontext (10 min zwischengespeichert)."""
+    """Chat models of the LiteLLM gateway with provider, prices and context (cached for 10 min)."""
     gw = cfg.get("gateway")
     if not gw:
         return []
@@ -562,12 +562,12 @@ def gateway_models(cfg: dict, refresh: bool = False) -> list[dict]:
 
 
 def gateway_prices(cfg: dict, model: str) -> dict | None:
-    """Preise pro Token laut Gateway; None ohne Gateway oder für unbekannte Modelle."""
+    """Per-token prices according to the gateway; None without a gateway or for unknown models."""
     return next((m for m in gateway_models(cfg) if m["id"] == model), None)
 
 
 def set_default_model(cfg: dict, config_path: Path, model: str) -> None:
-    """Standardmodell in config.yaml setzen (nur die `model:`-Zeile, Kommentare bleiben)."""
+    """Set the default model in config.yaml (only the `model:` line, comments are kept)."""
     text = config_path.read_text()
     new, n = re.subn(r"(?m)^model:.*$", f"model: {model}", text, count=1)
     if not n:
@@ -577,7 +577,7 @@ def set_default_model(cfg: dict, config_path: Path, model: str) -> None:
 
 
 def usage_of(cfg: dict, out: dict, seconds: float, model: str) -> dict:
-    """Tokens und Kosten einer Analyse. Mit Gateway zählen dessen Preise, sonst die der claude-CLI."""
+    """Tokens and costs of an analysis. With a gateway its prices count, otherwise those of the claude CLI."""
     u = out.get("usage") or {}
     fresh = (u.get("input_tokens") or 0) + (u.get("cache_creation_input_tokens") or 0)
     cached = u.get("cache_read_input_tokens") or 0
@@ -594,8 +594,8 @@ def usage_of(cfg: dict, out: dict, seconds: float, model: str) -> dict:
 
 def analyze(cfg: dict, meta: dict, body: str, names: dict | None = None, termine: list[dict] | None = None,
             model: str | None = None, termin_fest: bool = False) -> tuple[dict, dict]:
-    """Liefert (Ergebnis, Nutzung mit Tokens/Kosten). `names` ersetzt Sprecher-Platzhalter vorab, `termine` sind
-    Kalendertermine als Kontext – das Modell wählt den passenden, außer `termin_fest` (dann genau einer)."""
+    """Returns (result, usage with tokens/costs). `names` replaces speaker placeholders beforehand, `termine` are
+    calendar events as context - the model picks the matching one, unless `termin_fest` (then exactly one)."""
     reload_kategorien(cfg)
     meta, body = rename_speakers(meta, body, names)
     recorded = meta.get("Recorded At") or meta.get("recorded_at") or ""
@@ -612,7 +612,7 @@ def analyze(cfg: dict, meta: dict, body: str, names: dict | None = None, termine
 
 def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
                model: str | None = None) -> tuple[dict, dict]:
-    """`claude -p` ohne Tools mit strukturierter Ausgabe. Liefert (Ergebnis, Nutzung)."""
+    """`claude -p` without tools with structured output. Returns (result, usage)."""
     model = model or cfg.get("model", "sonnet")
     cmd = [
         "claude", "-p",
@@ -652,7 +652,7 @@ FOLLOWUP_SCHEMA = {
 
 def followup(cfg: dict, result: dict, teilnehmer: list[str], anrede: str = "du",
              sprache: str = "de", model: str | None = None) -> tuple[dict, dict]:
-    """Entwurf einer Follow-up-Mail aus dem geprüften Stand (Zusammenfassung, Entscheidungen, Todos)."""
+    """Draft of a follow-up mail from the reviewed state (summary, decisions, todos)."""
     ich = cfg["ich"]
     en = sprache == "en"
     form = ("informal, first names" if anrede == "du" else "formal") if en else \
@@ -683,8 +683,8 @@ def format_todo(todo: dict, ich: str) -> str:
     if who and not todo["ist_meins"]:
         line += f" (@{who})"
     if todo.get("faellig"):
-        line += f" 📅 {todo['faellig']}"  # Format des Obsidian-Tasks-Plugins
-    if todo.get("erledigt"):  # direkt als erledigt ablegen (Tasks: ✅ Erledigt-Datum)
+        line += f" 📅 {todo['faellig']}"  # format of the Obsidian Tasks plugin
+    if todo.get("erledigt"):  # file directly as done (Tasks: ✅ done date)
         if todo["ist_meins"]:
             return f"- [x] {line} ✅ {dt.date.today().isoformat()}"
         return f"- ~~{line}~~ (erledigt)"
@@ -734,7 +734,7 @@ def render(meta: dict, body: str, result: dict, cfg: dict, reviewed: bool = Fals
 
 
 def link_line(meta: dict, result: dict, cfg: dict) -> str:
-    """Wikilinks auf Kunde, Projekt, Person und Teilnehmer – Obsidian zeigt dort dann alle Gespräche."""
+    """Wikilinks for customer, project, person and participants - Obsidian then shows all conversations there."""
     if not cfg.get("links", True):
         return ""
     cat = cfg["kategorien"].get(result["kategorie"])
@@ -755,7 +755,7 @@ def link_line(meta: dict, result: dict, cfg: dict) -> str:
 
 
 def canonical_names(cfg: dict, result: dict) -> dict:
-    """Projekt- und Personennamen auf die Schreibweise aus categories.yaml bringen („pfk“ → „pFK“)."""
+    """Bring project and person names to the spelling from categories.yaml (\"pfk\" → \"pFK\")."""
     cat = cfg["kategorien"].get(result.get("kategorie"))
     if not cat:
         return result
@@ -798,7 +798,7 @@ def target_path(cfg: dict, meta: dict, result: dict, reviewed: bool = False) -> 
 
 
 def write_note(path: Path, cfg: dict, result: dict, reviewed: bool = False, names: dict | None = None) -> Path:
-    """Legt die fertige Notiz im Zielordner an und entfernt das Original aus der Inbox."""
+    """Creates the finished note in the target folder and removes the original from the inbox."""
     meta, body = rename_speakers(*split_frontmatter(path.read_text()), names)
     result = canonical_names(cfg, rename_in_result(result, names))
     dest = target_path(cfg, meta, result, reviewed)

@@ -1,25 +1,25 @@
-# Werkzeuge für den Debrief: `mise install` im Projektordner
+# Tools for the Debrief: `mise install` in the project folder
 [tools]
 uv = "latest"
-# Universal-Binary (arm64 + x86_64) direkt vom GitHub-Release
+# Universal binary (arm64 + x86_64) straight from the GitHub release
 "github:julienXX/terminal-notifier" = "3.1.0"
-jq = "latest"  # für `mise run status`
+jq = "latest"  # for `mise run status`
 
 [env]
 DEBRIEF_LABEL = "de.{{ exec(command='id -un') }}.debrief"
 
-# Aufgaben: `mise run <name>` bzw. `mise tasks` für die Übersicht
+# Tasks: `mise run <name>`, or `mise tasks` for an overview
 
 [tasks.install]
-description = "Werkzeuge installieren, launchd-Dienst einrichten und (neu) starten"
+description = "Install tools, set up the launchd service and (re)start it"
 run = "./install.sh"
 
 [tasks.uninstall]
-description = "launchd-Dienst entfernen (Dateien und Vorschläge bleiben)"
+description = "Remove the launchd service (files and suggestions are kept)"
 run = "./install.sh uninstall"
 
 [tasks.restart]
-description = "Dienst neu starten, z. B. nach Änderungen an server.py, debrief.py oder config.yaml"
+description = "Restart the service, e.g. after changes to server.py, debrief.py or config.yaml"
 shell = "bash -c"
 run = '''
 launchctl kickstart -k "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null && echo "neu gestartet" \
@@ -27,7 +27,7 @@ launchctl kickstart -k "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null && echo "neu ge
 '''
 
 [tasks.status]
-description = "Zeigt, ob der Dienst läuft, und die offenen Vorschläge"
+description = "Show whether the service is running, and the open suggestions"
 shell = "bash -c"
 run = '''
 if launchctl print "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null | grep -E "^\s+(state|pid) ="; then :; else echo "Dienst nicht installiert"; fi
@@ -40,7 +40,7 @@ fi
 '''
 
 [tasks.open]
-description = "Review-Seite im Browser öffnen"
+description = "Open the review page in the browser"
 shell = "bash -c"
 run = '''
 host=$(sed -n 's/^ *host: *\([^ #]*\).*/\1/p' config.yaml | head -1)
@@ -49,11 +49,11 @@ open "http://${host:-127.0.0.1}:${port:-8765}/"
 '''
 
 [tasks.logs]
-description = "Logs live verfolgen"
+description = "Follow the logs live"
 run = "tail -n 50 -F debrief.log launchd.log"
 
 [tasks.dev]
-description = "Server im Vordergrund starten (Dienst wird solange angehalten und danach wieder gestartet)"
+description = "Run the server in the foreground (the service is paused meanwhile and restarted afterwards)"
 shell = "bash -c"
 run = '''
 plist="$HOME/Library/LaunchAgents/$DEBRIEF_LABEL.plist"
@@ -65,16 +65,16 @@ uv run --script server.py
 '''
 
 [tasks.calendar-access]
-description = "Kalenderzugriff für das Hilfsprogramm anfragen bzw. prüfen"
+description = "Request or check calendar access for the helper app"
 shell = "bash -c"
 run = '''
 out=$(mktemp); open -W -n --stdout "$out" "$PWD/bin/Debrief Calendar.app" --args --auth; cat "$out"; rm -f "$out"
 '''
 
 [tasks.dry-run]
-description = "Inbox analysieren und Ergebnis nur anzeigen, ohne etwas zu schreiben"
+description = "Analyze the inbox and only show the result, without writing anything"
 run = "uv run --script debrief.py --dry-run"
 
 [tasks.sort]
-description = "Direktmodus: alles in der Inbox ohne Review sofort einsortieren"
+description = "Direct mode: file everything in the inbox immediately, without review"
 run = "uv run --script debrief.py"
