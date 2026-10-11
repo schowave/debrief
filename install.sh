@@ -29,7 +29,7 @@ CLAUDE="$(command -v claude)" || { echo "claude (Claude Code CLI) fehlt im PATH"
 
 cd "$DIR"
 # Persönliche Einstellungen liegen nicht im Git: beim ersten Mal aus den Beispielen anlegen
-for f in config kategorien; do
+for f in config categories; do
   if [[ ! -f "$f.yaml" ]]; then
     cp "$f.example.yaml" "$f.yaml"
     echo "$f.yaml aus $f.example.yaml angelegt – bitte anpassen (Vault-Pfad, Name, Kategorien) und erneut installieren." >&2
