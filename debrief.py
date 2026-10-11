@@ -173,7 +173,11 @@ def rename_in_result(result: dict, names: dict[str, str] | None) -> dict:
     names = {k: v.strip() for k, v in (names or {}).items() if v and v.strip()}
     if not names:
         return result
-    pattern = re.compile("|".join(rf"\b{re.escape(k)}\b(?!\d)" for k in sorted(names, key=len, reverse=True)))
+    # A short label ("Petr") must not be expanded again inside a text that already has the full name ("Petr Novikov").
+    def alternative(k: str) -> str:
+        tail = names[k][len(k):] if names[k].startswith(k) else ""
+        return rf"\b{re.escape(k)}\b(?!\d)" + (rf"(?!{re.escape(tail)})" if tail.strip() else "")
+    pattern = re.compile("|".join(alternative(k) for k in sorted(names, key=len, reverse=True)))
     sub = lambda text: pattern.sub(lambda m: names[m[0]], text) if isinstance(text, str) else text
     out = dict(result)
     for key in ("titel", "zusammenfassung", "begruendung", "person"):
