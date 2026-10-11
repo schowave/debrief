@@ -1,0 +1,70 @@
+# Pfad zum Obsidian-Vault
+vault: ~/Documents/Obsidian Vault
+
+# Ordner, in den MacWhisper die Transkripte legt (relativ zum Vault)
+inbox: transkripts
+
+# Dein Name, wie er im Transkript als Sprecher auftaucht
+ich: Max
+
+# Optional: deine Rolle, hilft dem Modell beim Einordnen (z. B. "Berater bei Acme")
+#rolle: Beraterin bei Acme
+
+# Modell für `claude -p` (Alias wie `sonnet` oder volle Modell-ID). Ohne `gateway` wird dein normales
+# Claude-Abo genutzt – die Transkripte gehen dann an Anthropic.
+model: sonnet
+
+# Optional: LiteLLM-kompatibles Gateway (z. B. firmeneigen, mit intern gehosteten Modellen), damit
+# Gesprächsinhalte im Haus bleiben. Dann erscheint unter „Einstellungen → Modell“ die Modellliste.
+#gateway:
+#  base_url: https://llm-gateway.example.com/
+#  # API-Key, eine der drei Varianten:
+#  #   token_cmd: Befehl, der den Key ausgibt (empfohlen, z. B. Schlüsselbund/Passwortmanager)
+#  #   token_env: Name einer Umgebungsvariable (Achtung: launchd sieht deine Shell-Variablen nicht)
+#  #   token:     der Key selbst (dann config.yaml nicht committen)
+#  token_cmd: security find-generic-password -s llm-gateway -w
+
+# Unter dieser Konfidenz landet die Notiz in `unklar_ordner` statt beim Kunden
+min_konfidenz: 0.6
+unklar_ordner: Transkripte/_Unklar
+
+# Sprache der Benachrichtigungen und der Review-Seite beim ersten Aufruf: de oder en
+# (die Seite selbst lässt sich oben rechts umschalten und merkt sich die Wahl)
+sprache: de
+
+# Review-Oberfläche (server.py): neue Transkripte werden erst nach Bestätigung abgelegt
+review:
+  # Adresse der Seite: http://<host>:<port>/ – *.localhost zeigt ohne Einrichtung auf diesen Rechner
+  host: debrief.localhost
+  port: 8765
+  # Bei neuem Vorschlag: false = Mitteilung (Klick öffnet die Seite), true = Browser-Tab direkt öffnen.
+  # Ist die Seite gerade offen, passiert beides nicht (sie aktualisiert sich selbst).
+  auto_open: false
+  # Mitteilungen ganz abschalten (z. B. für einen Testserver)
+  mitteilung: true
+
+# Aufnahmen mit weniger Wörtern gelten als Test und werden nicht analysiert (auf der Seite: verwerfen / trotzdem analysieren)
+min_woerter: 30
+
+# Wikilinks auf Kunde, Projekt, Person und Teilnehmer oben in jeder Notiz
+links: true
+
+# Doppelte Transkripte (Ähnlichkeit 0–1 zu Inbox und abgelegten Notizen; gleiche Aufnahmezeit+Dauer zählt als 0,9)
+duplikate:
+  automatisch_ab: 0.9   # ab hier: automatisch in den Papierkorb (wiederherstellbar unter Einstellungen → Duplikate)
+  pruefen_ab: 0.5       # ab hier: nicht analysieren, sondern als „Duplikat?“ zur Entscheidung zeigen
+
+# Kalendertermin zur Aufnahmezeit (macOS-Kalender) als Kontext: Titel, Organisator, Eingeladene
+kalender: true
+# Ein Termin kommt in Frage, wenn die Aufnahme zwischen vor_beginn_min vor und nach_beginn_min nach seinem
+# Beginn startet – oder wenn er beim Aufnahmestart gerade läuft
+kalender_fenster:
+  vor_beginn_min: 10
+  nach_beginn_min: 30
+
+# Die Kategorien stehen in kategorien.yaml (auch über die Review-Seite bearbeitbar)
+
+# Ordner mit älteren Transkripten für „Importieren“ auf der Review-Seite
+import:
+  ordner:
+    - ~/Desktop/Whisper

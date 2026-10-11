@@ -1,0 +1,46 @@
+/* Debrief: in Tasks-Abfragen das Fälligkeitsdatum vor dem Text anzeigen */
+.plugin-tasks-list-item .tasks-list-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.5em;
+}
+.plugin-tasks-list-item .tasks-list-text .task-description {
+  flex: 1 1 0;
+  min-width: 12em;
+}
+.plugin-tasks-list-item .tasks-list-text .task-due {
+  order: -1;
+  white-space: nowrap;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  padding: 0 0.45em;
+  border-radius: 4px;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+/* überfällig rot, heute in Akzentfarbe */
+.plugin-tasks-list-item[data-task-due^="past"] .task-due,
+.plugin-tasks-list-item .task-due[data-task-due^="past"] { color: var(--text-error); }
+.plugin-tasks-list-item[data-task-due="today"] .task-due,
+.plugin-tasks-list-item .task-due[data-task-due="today"] { color: var(--text-accent); }
+
+/* relative Anzeige */
+/* Tasks markiert Termine bis 7 Tage Abstand (data-task-due = today, past-Nd, future-Nd, sonst *-far).
+   Diese werden relativ angezeigt, weiter entfernte bleiben als Datum. Klick auf die Plakette zeigt/ändert das Datum. */
+.plugin-tasks-list-item .task-due[data-task-due]:not([data-task-due$="far"]) > span { display: none; }
+.plugin-tasks-list-item .task-due[data-task-due="today"]::before { content: "📅 Heute"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-1d"]::before { content: "📅 Morgen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-1d"]::before { content: "📅 seit gestern"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-2d"]::before { content: "📅 in 2 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-2d"]::before { content: "📅 seit 2 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-3d"]::before { content: "📅 in 3 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-3d"]::before { content: "📅 seit 3 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-4d"]::before { content: "📅 in 4 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-4d"]::before { content: "📅 seit 4 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-5d"]::before { content: "📅 in 5 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-5d"]::before { content: "📅 seit 5 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-6d"]::before { content: "📅 in 6 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-6d"]::before { content: "📅 seit 6 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="future-7d"]::before { content: "📅 in 7 Tagen"; }
+.plugin-tasks-list-item .task-due[data-task-due="past-7d"]::before { content: "📅 seit 7 Tagen"; }

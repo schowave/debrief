@@ -1,0 +1,74 @@
+filters:
+  and:
+    - file.hasTag("transkript")
+formulas:
+  teilnehmer: 'note.Speakers.filter(!value.startsWith("Speaker")).join(", ")'
+properties:
+  file.name:
+    displayName: Gespräch
+  note.kunde:
+    displayName: Kunde
+  note.projekt:
+    displayName: Projekt
+  note.person:
+    displayName: Person
+  note.termin:
+    displayName: Kalendertermin
+  note.Duration:
+    displayName: Dauer
+  formula.teilnehmer:
+    displayName: Teilnehmer
+views:
+  - type: table
+    name: Alle Gespräche
+    order:
+      - file.name
+      - note.kunde
+      - note.projekt
+      - note.person
+      - note.termin
+      - formula.teilnehmer
+      - note.Duration
+    sort:
+      - property: file.name
+        direction: DESC
+  - type: table
+    name: Nach Kunde
+    groupBy:
+      property: note.kunde
+      direction: ASC
+    order:
+      - file.name
+      - note.projekt
+      - note.person
+      - note.termin
+      - note.Duration
+    sort:
+      - property: file.name
+        direction: DESC
+  - type: table
+    name: pFK
+    filters:
+      and:
+        - 'note.projekt == "pFK"'
+    groupBy:
+      property: note.person
+      direction: ASC
+    order:
+      - file.name
+      - note.termin
+      - formula.teilnehmer
+      - note.Duration
+    sort:
+      - property: file.name
+        direction: DESC
+  - type: cards
+    name: Karten
+    order:
+      - file.name
+      - note.kunde
+      - note.projekt
+      - note.termin
+    sort:
+      - property: file.name
+        direction: DESC

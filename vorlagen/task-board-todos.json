@@ -1,0 +1,113 @@
+{
+  "columns": [
+    {
+      "id": 2026101201,
+      "index": 1,
+      "colType": "dated",
+      "active": true,
+      "collapsed": false,
+      "name": "Überfällig",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": -300,
+        "to": -1
+      }
+    },
+    {
+      "id": 2026101202,
+      "index": 2,
+      "colType": "dated",
+      "active": true,
+      "collapsed": false,
+      "name": "Heute",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": 0,
+        "to": 0
+      }
+    },
+    {
+      "id": 2026101203,
+      "index": 3,
+      "colType": "dated",
+      "active": true,
+      "collapsed": false,
+      "name": "Morgen",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": 1,
+        "to": 1
+      }
+    },
+    {
+      "id": 2026101204,
+      "index": 4,
+      "colType": "dated",
+      "active": true,
+      "collapsed": false,
+      "name": "Diese Woche",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": 2,
+        "to": 7
+      }
+    },
+    {
+      "id": 2026101205,
+      "index": 5,
+      "colType": "dated",
+      "active": true,
+      "collapsed": false,
+      "name": "Später",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": 8,
+        "to": 300
+      }
+    },
+    {
+      "id": 2026101206,
+      "index": 6,
+      "colType": "undated",
+      "active": true,
+      "collapsed": false,
+      "name": "Ohne Termin",
+      "datedBasedColumn": {
+        "dateType": "due",
+        "from": 0,
+        "to": 0
+      }
+    },
+    {
+      "id": 2026101207,
+      "index": 7,
+      "colType": "completed",
+      "active": true,
+      "collapsed": true,
+      "limit": 30,
+      "name": "Erledigt"
+    }
+  ],
+  "name": "Todos",
+  "index": 0,
+  "showColumnTags": false,
+  "showFilteredTags": true,
+  "hideEmptyColumns": false,
+  "boardFilter": {
+    "rootCondition": "any",
+    "filterGroups": []
+  },
+  "swimlanes": {
+    "enabled": false,
+    "hideEmptySwimlanes": false,
+    "property": "tags",
+    "sortCriteria": "asc",
+    "minimized": [],
+    "maxHeight": "300px",
+    "headerUIType": "hor"
+  },
+  "taskCount": {
+    "pending": 8,
+    "completed": 1
+  }
+}

@@ -1,0 +1,15 @@
+pending/
+*.log
+*.tmp
+__pycache__/
+.DS_Store
+.idea/
+gelernt.json
+abgelegt.json
+config.yaml.bak
+bin/*.app/
+bin/.kalender-build-hash
+fingerabdruecke.json
+duplikate.json
+/config.yaml
+/kategorien.yaml

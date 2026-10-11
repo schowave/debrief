@@ -1,0 +1,23 @@
+# Kategorien: Schlüssel = Wert für das Property `kunde`.
+# `hinweise` helfen dem Modell beim Zuordnen (Personen, Projekte, Begriffe).
+# Projekte landen in `<ordner>/<Projekt>`, betreute Personen in `<ordner>/<Projekt>/<Person>`.
+# Wird auch von der Review-Seite geschrieben (Kommentare gehen dabei verloren).
+acme:
+  ordner: Kunden/Acme
+  hinweise: Kundenprojekt bei Acme (Plattform-Migration, Architektur-Workshops)
+  projekte:
+    plattform-migration:
+      hinweise: Umzug der Plattform in die Cloud
+      personen: []
+intern:
+  ordner: Intern
+  hinweise: Interne Termine, z. B. Teamrunden, Coachings, Personalthemen
+  projekte:
+    Mitarbeitergespräche:
+      hinweise: Entwicklungs- und Feedbackgespräche
+      personen:
+        - Erika Mustermann
+privat:
+  ordner: Privat
+  hinweise: Private Gespräche ohne Arbeitsbezug
+  projekte: {}

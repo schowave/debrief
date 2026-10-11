@@ -1,0 +1,80 @@
+# Werkzeuge für den Debrief: `mise install` im Projektordner
+[tools]
+uv = "latest"
+# Universal-Binary (arm64 + x86_64) direkt vom GitHub-Release
+"github:julienXX/terminal-notifier" = "3.1.0"
+jq = "latest"  # für `mise run status`
+
+[env]
+DEBRIEF_LABEL = "de.{{ exec(command='id -un') }}.debrief"
+
+# Aufgaben: `mise run <name>` bzw. `mise tasks` für die Übersicht
+
+[tasks.install]
+description = "Werkzeuge installieren, launchd-Dienst einrichten und (neu) starten"
+run = "./install.sh"
+
+[tasks.uninstall]
+description = "launchd-Dienst entfernen (Dateien und Vorschläge bleiben)"
+run = "./install.sh uninstall"
+
+[tasks.restart]
+description = "Dienst neu starten, z. B. nach Änderungen an server.py, debrief.py oder config.yaml"
+shell = "bash -c"
+run = '''
+launchctl kickstart -k "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null && echo "neu gestartet" \
+  || { echo "Dienst nicht installiert – erst: mise run install" >&2; exit 1; }
+'''
+
+[tasks.status]
+description = "Zeigt, ob der Dienst läuft, und die offenen Vorschläge"
+shell = "bash -c"
+run = '''
+if launchctl print "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null | grep -E "^\s+(state|pid) ="; then :; else echo "Dienst nicht installiert"; fi
+port=$(sed -n 's/^ *port: *\([0-9]*\).*/\1/p' config.yaml | head -1)
+if state=$(curl -sf "http://127.0.0.1:${port:-8765}/api/state"); then
+  jq -r 'if .items == [] then "  keine offenen Vorschläge" else .items[] | "  \(.status)\t\(.datei)" end' <<<"$state"
+else
+  echo "Server nicht erreichbar"
+fi
+'''
+
+[tasks.open]
+description = "Review-Seite im Browser öffnen"
+shell = "bash -c"
+run = '''
+host=$(sed -n 's/^ *host: *\([^ #]*\).*/\1/p' config.yaml | head -1)
+port=$(sed -n 's/^ *port: *\([0-9]*\).*/\1/p' config.yaml | head -1)
+open "http://${host:-127.0.0.1}:${port:-8765}/"
+'''
+
+[tasks.logs]
+description = "Logs live verfolgen"
+run = "tail -n 50 -F debrief.log launchd.log"
+
+[tasks.dev]
+description = "Server im Vordergrund starten (Dienst wird solange angehalten und danach wieder gestartet)"
+shell = "bash -c"
+run = '''
+plist="$HOME/Library/LaunchAgents/$DEBRIEF_LABEL.plist"
+if launchctl bootout "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null; then
+  trap 'launchctl bootstrap "gui/$(id -u)" "$plist" && echo "Dienst wieder gestartet"' EXIT
+  echo "Dienst angehalten"
+fi
+uv run --script server.py
+'''
+
+[tasks.kalender-zugriff]
+description = "Kalenderzugriff für das Hilfsprogramm anfragen bzw. prüfen"
+shell = "bash -c"
+run = '''
+out=$(mktemp); open -W -n --stdout "$out" "$PWD/bin/Debrief Kalender.app" --args --auth; cat "$out"; rm -f "$out"
+'''
+
+[tasks.dry-run]
+description = "Inbox analysieren und Ergebnis nur anzeigen, ohne etwas zu schreiben"
+run = "uv run --script debrief.py --dry-run"
+
+[tasks.sort]
+description = "Direktmodus: alles in der Inbox ohne Review sofort einsortieren"
+run = "uv run --script debrief.py"
