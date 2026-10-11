@@ -44,8 +44,8 @@ from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, is_me, analyze, cale
                        word_count, write_note)
 
 PENDING = HERE / "pending"
-ABGELEGT = HERE / "abgelegt.json"  # Verlauf für „Zuletzt abgelegt“
-DUPLIKATE = HERE / "duplikate.json"  # automatisch verworfene Duplikate (zum Wiederherstellen)
+ABGELEGT = HERE / "filed.json"  # Verlauf für „Zuletzt abgelegt“
+DUPLIKATE = HERE / "duplicates.json"  # automatisch verworfene Duplikate (zum Wiederherstellen)
 MAX_ABGELEGT = 30
 TRASH = Path.home() / ".Trash"
 INDEX_HTML = HERE / "static" / "index.html"
@@ -596,7 +596,7 @@ def make_handler(store: Store):
                 elif m := re.fullmatch(r"/api/items/(\w+)/transkript", path):
                     _, body = split_frontmatter(store.source(store.get(m[1])).read_text())
                     self.send_json({"transkript": body})
-                elif path == "/api/kategorien.yaml":
+                elif path == "/api/categories.yaml":
                     self.send_json({"yaml": cfg["kategorien_datei"].read_text()})
                 elif path == "/api/korrekturen":
                     self.send_json({"korrekturen": load_gelernt()["korrekturen"]})
@@ -797,7 +797,7 @@ def make_handler(store: Store):
                 elif path == "/api/kategorien":
                     save_kategorien(cfg, body["kategorien"])
                     self.send_json(self.state())
-                elif path == "/api/kategorien.yaml":
+                elif path == "/api/categories.yaml":
                     save_kategorien(cfg, yaml.safe_load(body["yaml"]) or {})
                     self.send_json(self.state())
                 else:

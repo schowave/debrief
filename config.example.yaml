@@ -62,7 +62,7 @@ kalender_fenster:
   vor_beginn_min: 10
   nach_beginn_min: 30
 
-# Die Kategorien stehen in kategorien.yaml (auch über die Review-Seite bearbeitbar)
+# Die Kategorien stehen in categories.yaml (auch über die Review-Seite bearbeitbar)
 
 # Ordner mit älteren Transkripten für „Importieren“ auf der Review-Seite
 import:

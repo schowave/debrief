@@ -42,9 +42,9 @@ macOS (launchd, FSEvents, calendar helper) and:
 | [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`) | runs the analysis | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Obsidian + plugin **Local REST API** | MacWhisper writes into the vault through it | Obsidian → Community plugins |
 | Xcode Command Line Tools (`swiftc`, optional) | builds the calendar helper | `xcode-select --install` |
-| Obsidian plugin **Tasks** (optional) | todo overview across all notes – template `vorlagen/Todos.md`; copy `vorlagen/debrief-tasks.css` to `.obsidian/snippets/` and enable it | Obsidian → Community plugins |
-| Obsidian plugin **Task Board** (optional) | kanban board over all todos – template `vorlagen/task-board-todos.json` (insert as `data.boardConfigs[0]` in `.obsidian/plugins/task-board/data.json` while the plugin is off, then enable it and "Scan Vault") | Obsidian → Community plugins |
-| Obsidian **Bases** (built in, 1.9+) | conversation overview – copy `vorlagen/Gespräche.base` into the vault | – |
+| Obsidian plugin **Tasks** (optional) | todo overview across all notes – template `templates/Todos.md`; copy `templates/debrief-tasks.css` to `.obsidian/snippets/` and enable it | Obsidian → Community plugins |
+| Obsidian plugin **Task Board** (optional) | kanban board over all todos – template `templates/task-board-todos.json` (insert as `data.boardConfigs[0]` in `.obsidian/plugins/task-board/data.json` while the plugin is off, then enable it and "Scan Vault") | Obsidian → Community plugins |
+| Obsidian **Bases** (built in, 1.9+) | conversation overview – copy `templates/Conversations.base` into the vault | – |
 
 ## Installation
 
@@ -53,7 +53,7 @@ git clone https://github.com/schowave/debrief.git && cd debrief
 mise trust && mise run install
 ```
 
-On the first run the installer creates `config.yaml` and `kategorien.yaml` from the `*.example.yaml` files and stops:
+On the first run the installer creates `config.yaml` and `categories.yaml` from the `*.example.yaml` files and stops:
 adjust them (vault path, your name, categories) and run `mise run install` again. Both files are git-ignored, so
 your personal data never ends up in the repository.
 
@@ -80,7 +80,7 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 | `mise run open` | open the review page |
 | `mise run logs` | follow the logs |
 | `mise run dev` | run the server in the terminal; the service pauses meanwhile |
-| `mise run kalender-zugriff` | request/check calendar access of the helper |
+| `mise run calendar-access` | request/check calendar access of the helper |
 | `mise run dry-run` | analyse the inbox, only print |
 | `mise run sort` | direct mode: file without review |
 
@@ -108,7 +108,7 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 | `duplikate` | thresholds for duplicate detection |
 | `import.ordner` | folders with older transcripts for the import dialog |
 
-**`kategorien.yaml`** – also editable on the review page under *Settings → Categories*.
+**`categories.yaml`** – also editable on the review page under *Settings → Categories*.
 
 ```yaml
 acme:                           # value of the `kunde` property
@@ -123,7 +123,7 @@ acme:                           # value of the `kunde` property
 Good `hinweise` (project names, contacts, typical terms) improve the assignment the most.
 
 > The keys in the YAML files and the note format (`kunde:`, `## Transkript`, `## Meine Todos` …) are German on purpose:
-> the Obsidian templates in `vorlagen/` and existing notes rely on them.
+> the Obsidian templates in `templates/` and existing notes rely on them.
 
 ## Usage
 
@@ -153,7 +153,7 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 | Changed | Takes effect |
 |---|---|
 | `static/index.html`, `static/i18n.js` | immediately (reload the page) |
-| `kategorien.yaml` | immediately |
+| `categories.yaml` | immediately |
 | `server.py`, `debrief.py` | after `mise run restart` |
 | `config.yaml` | via *Settings → Configuration* immediately, otherwise `mise run restart` |
 | `mise.toml`, `launchd.plist.template` | `mise run install` |
@@ -166,9 +166,9 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 | `debrief.py` | analysis (prompt, schema), render/file notes; also usable as a CLI |
 | `importer.py` | import from folders and drag & drop |
 | `static/index.html`, `static/i18n.js` | review page and its English texts |
-| `config.example.yaml`, `kategorien.example.yaml` | templates for your local `config.yaml` / `kategorien.yaml` |
-| `kalender/` | source and build script of the calendar helper (`bin/Debrief Kalender.app`, not in git) |
-| `vorlagen/` | Obsidian templates (Bases, Tasks, Task Board) |
+| `config.example.yaml`, `categories.example.yaml` | templates for your local `config.yaml` / `categories.yaml` |
+| `calendar/` | source and build script of the calendar helper (`bin/Debrief Calendar.app`, not in git) |
+| `templates/` | Obsidian templates (Bases, Tasks, Task Board) |
 | `install.sh`, `launchd.plist.template`, `bin/debrief` | service setup |
 
 ## Troubleshooting
@@ -183,8 +183,8 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 
 Transcripts contain client and personnel internals. With a `gateway` they can be processed on models you host
 yourself; without it they go to Anthropic through your Claude account. The review page only listens on `127.0.0.1`
-and only accepts JSON requests from its own page. `config.yaml`, `kategorien.yaml` and everything learned
-(`gelernt.json`, `abgelegt.json`, …) stay local and are git-ignored.
+and only accepts JSON requests from its own page. `config.yaml`, `categories.yaml` and everything learned
+(`learned.json`, `filed.json`, …) stay local and are git-ignored.
 
 ## Contributing
 

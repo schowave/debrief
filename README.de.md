@@ -27,9 +27,9 @@ MacWhisper ──(Obsidian-Integration)──▶ Vault/transkripts/
 | [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`) | führt die Analyse aus | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Obsidian + Plugin **Local REST API** | MacWhisper schreibt darüber in den Vault | Obsidian → Community-Plugins |
 | Xcode Command Line Tools (`swiftc`, optional) | baut das Kalender-Hilfsprogramm | `xcode-select --install` |
-| Obsidian-Plugin **Task Board** (optional) | Kanban-Board über alle Todos. Board-Vorlage `vorlagen/task-board-todos.json`: bei ausgeschaltetem Plugin in `.obsidian/plugins/task-board/data.json` als `data.boardConfigs[0]` eintragen, dann Plugin einschalten und „Scan Vault“ | Obsidian → Community-Plugins |
-| Obsidian **Bases** (eingebaut, ab 1.9) | Gesprächsübersicht – Vorlage `vorlagen/Gespräche.base` in den Vault kopieren | – |
-| Obsidian-Plugin **Tasks** (optional) | Todo-Übersicht über alle Notizen – Vorlage `vorlagen/Todos.md` in den Vault kopieren; `vorlagen/debrief-tasks.css` nach `.obsidian/snippets/` (Datum vorne) und unter Einstellungen → Darstellung → CSS-Snippets einschalten | Obsidian → Community-Plugins |
+| Obsidian-Plugin **Task Board** (optional) | Kanban-Board über alle Todos. Board-Vorlage `templates/task-board-todos.json`: bei ausgeschaltetem Plugin in `.obsidian/plugins/task-board/data.json` als `data.boardConfigs[0]` eintragen, dann Plugin einschalten und „Scan Vault“ | Obsidian → Community-Plugins |
+| Obsidian **Bases** (eingebaut, ab 1.9) | Gesprächsübersicht – Vorlage `templates/Conversations.base` in den Vault kopieren | – |
+| Obsidian-Plugin **Tasks** (optional) | Todo-Übersicht über alle Notizen – Vorlage `templates/Todos.md` in den Vault kopieren; `templates/debrief-tasks.css` nach `.obsidian/snippets/` (Datum vorne) und unter Einstellungen → Darstellung → CSS-Snippets einschalten | Obsidian → Community-Plugins |
 
 **mise ist Pflicht:** Der Dienst startet über `mise exec`, und alle Werkzeuge außer
 `claude` kommen aus `mise.toml`. Einen `terminal-notifier` aus dem Ruby-Gem ignoriert der
@@ -42,7 +42,7 @@ git clone https://github.com/schowave/debrief.git && cd debrief
 mise trust && mise run install   # Werkzeuge + launchd-Dienst einrichten und starten
 ```
 
-Beim ersten Mal legt der Installer `config.yaml` und `kategorien.yaml` aus den `*.example.yaml` an und hält an:
+Beim ersten Mal legt der Installer `config.yaml` und `categories.yaml` aus den `*.example.yaml` an und hält an:
 Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausführen. Beide Dateien stehen in der
 `.gitignore` – persönliche Daten landen so nicht im Repository.
 
@@ -57,7 +57,7 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 | `mise run open` | Review-Seite öffnen |
 | `mise run logs` | Logs live verfolgen |
 | `mise run dev` | Server im Terminal starten; der Dienst pausiert solange und startet danach wieder |
-| `mise run kalender-zugriff` | Kalenderzugriff des Hilfsprogramms anfragen bzw. prüfen |
+| `mise run calendar-access` | Kalenderzugriff des Hilfsprogramms anfragen bzw. prüfen |
 | `mise run dry-run` | Inbox analysieren, nur anzeigen |
 | `mise run sort` | Direktmodus: ohne Review einsortieren |
 
@@ -102,7 +102,7 @@ Sprecher in MacWhisper benennen lohnt sich: dann stimmen die Verantwortlichen be
 | `kalender` | Kalendertermin zur Aufnahmezeit als Kontext nutzen (siehe „Kalender“) |
 | `links` | Wikilinks `[[Kunde]]`, `[[Projekt]]`, `[[Person]]`, `[[Teilnehmer]]` oben in jeder Notiz – Obsidian zeigt dann auf diesen Seiten alle Gespräche (Backlinks) |
 
-**`kategorien.yaml`** – auch auf der Review-Seite unter „Einstellungen → Kategorien“ änderbar.
+**`categories.yaml`** – auch auf der Review-Seite unter „Einstellungen → Kategorien“ änderbar.
 
 ```yaml
 acme:                           # Wert für das Property `kunde`
@@ -129,7 +129,7 @@ Auf der Seite:
   „＋ Neue Kategorie / Neues Projekt / Neue Person“ legt direkt etwas an, mit dem Schalter „merken“ dauerhaft.
   Der Zielpfad wird live angezeigt
 - **Sprecher benennen:** „Speaker 1“ usw. mit Beispielsatz – Namen eintragen (Vorschläge aus den Personen in
-  `kategorien.yaml` und früher vergebenen Namen). Beim Ablegen werden sie im Transkript, in Zusammenfassung und
+  `categories.yaml` und früher vergebenen Namen). Beim Ablegen werden sie im Transkript, in Zusammenfassung und
   Todos ersetzt; „Mit diesen Namen neu analysieren“ lässt das Modell mit den echten Namen neu arbeiten. Das Modell schlägt
   pro Sprecher einen Namen mit Begründung vor (Anrede, Vorstellung, Eingeladene des Termins) – „Übernehmen“ bzw. „Alle
   Vorschläge übernehmen“. Exportiert MacWhisper den Text ohne Sprecher (alles ein Absatz), zeigt die Karte das an
@@ -152,7 +152,7 @@ Auf der Seite:
   <kbd>⌘↵</kbd> ablegen, <kbd>?</kbd> Übersicht
 
 **Lernen aus Korrekturen:** Weicht deine Zuordnung (Kategorie/Projekt/Person) vom Vorschlag ab, merkt sich der
-Debrief das in `gelernt.json` und schickt die letzten 15 Korrekturen bei jeder Analyse als Beispiele mit.
+Debrief das in `learned.json` und schickt die letzten 15 Korrekturen bei jeder Analyse als Beispiele mit.
 Unter „Einstellungen → Korrekturen“ lassen sich die Einträge ansehen, nachträglich ändern und entfernen.
 
 **Verlinkung:** Jede Notiz beginnt mit `**Kunde:** [[…]] · **Projekt:** [[…]] · **Person:** [[…]] ·
@@ -221,7 +221,7 @@ der Text). Danach läuft alles wie bei neuen Aufnahmen: Duplikat-Prüfung, Kalen
 
 Jedes Transkript bekommt einen Fingerabdruck aus dem gesprochenen Text (ohne Sprechernamen, damit auch umbenannte
 Kopien erkannt werden). Verglichen wird mit den Transkripten in der Inbox und mit allen abgelegten Notizen – die
-schon vorhandenen Notizen im Vault werden beim Start einmalig erfasst (`fingerabdruecke.json`, nicht im Git).
+schon vorhandenen Notizen im Vault werden beim Start einmalig erfasst (`fingerprints.json`, nicht im Git).
 
 | Ähnlichkeit | Verhalten |
 |---|---|
@@ -250,10 +250,10 @@ In Frage kommt ein Termin, wenn die Aufnahme zwischen 10 Minuten vor und 30 Minu
 - Die Follow-up-Mail geht an die Eingeladenen (Adressen im Mailprogramm vorausgefüllt, bis 15 Empfänger)
 - Die Notiz bekommt `termin:` im Frontmatter und „**Termin:** …“ in der Bezugszeile
 
-Technisch: Das kleine Hilfsprogramm `bin/Debrief Kalender.app` (Quelle: `kalender/main.swift`) fragt die
+Technisch: Das kleine Hilfsprogramm `bin/Debrief Calendar.app` (Quelle: `calendar/main.swift`) fragt die
 macOS-Kalenderschnittstelle ab. `mise run install` baut es – nur wenn sich der Code geändert hat – und fragt
 einmalig nach dem Kalenderzugriff. Es läuft nur kurz pro Transkript, nicht dauerhaft. Zugriff prüfen bzw.
-erneut anfragen: `mise run kalender-zugriff`; verwalten unter Systemeinstellungen → Datenschutz & Sicherheit →
+erneut anfragen: `mise run calendar-access`; verwalten unter Systemeinstellungen → Datenschutz & Sicherheit →
 Kalender. Wird die App neu gebaut, fragt macOS erneut (die Erlaubnis gilt pro Build).
 
 ### Einstellungen auf der Review-Seite
@@ -262,10 +262,10 @@ Der Button „Einstellungen“ zeigt alle lokalen Dateien zum Ansehen und Bearbe
 
 | Reiter | Datei | Möglich |
 |---|---|---|
-| Kategorien | `kategorien.yaml` | ganze Datei bearbeiten (wirkt sofort) |
-| Korrekturen | `gelernt.json` | ansehen, „richtige“ Zuordnung ändern, entfernen |
-| Namen | `gelernt.json` | gelernte Sprechernamen umbenennen (Klick + Enter), entfernen, hinzufügen |
-| Verlauf | `abgelegt.json` | abgelegte Notizen mit Obsidian-Link, einzeln entfernen oder alles leeren |
+| Kategorien | `categories.yaml` | ganze Datei bearbeiten (wirkt sofort) |
+| Korrekturen | `learned.json` | ansehen, „richtige“ Zuordnung ändern, entfernen |
+| Namen | `learned.json` | gelernte Sprechernamen umbenennen (Klick + Enter), entfernen, hinzufügen |
+| Verlauf | `filed.json` | abgelegte Notizen mit Obsidian-Link, einzeln entfernen oder alles leeren |
 | Konfiguration | `config.yaml` | ganze Datei bearbeiten; wird geprüft (YAML, Pflichtfelder, Inbox-Ordner, Port), die alte als `config.yaml.bak` gesichert und der Dienst startet automatisch neu |
 
 Ungespeicherte Änderungen an Kategorien oder Konfiguration gehen beim Schließen erst nach einer Rückfrage verloren.
@@ -275,7 +275,7 @@ Ungespeicherte Änderungen an Kategorien oder Konfiguration gehen beim Schließe
 | Geändert | Wirksam |
 |---|---|
 | `static/index.html`, `static/i18n.js` (Review-Seite) | sofort – wird bei jedem Aufruf frisch von der Platte gelesen, Seite im Browser neu laden |
-| `kategorien.yaml` (von Hand oder über die Seite) | sofort – wird bei Änderung automatisch neu eingelesen |
+| `categories.yaml` (von Hand oder über die Seite) | sofort – wird bei Änderung automatisch neu eingelesen |
 | `server.py`, `debrief.py` (Logik, Prompt, Schema) | nach Neustart des Dienstes |
 | `config.yaml` | über „Einstellungen → Konfiguration“ sofort (Neustart automatisch), sonst nach `mise run restart` |
 | `mise.toml`, `launchd.plist.template` | `mise run install` |
@@ -294,12 +294,12 @@ Zum Entwickeln `mise run dev`: hält den Dienst an, startet den Server im Termin
 | `debrief.py` | Analyse (Prompt, Schema), Notiz rendern/ablegen; auch als CLI nutzbar |
 | `importer.py` | Import aus Ordnern und per Drag & Drop (Suche, Vorschau, Kopie in die Inbox) |
 | `static/index.html`, `static/i18n.js` | Review-Seite und ihre englischen Texte |
-| `config.yaml`, `kategorien.yaml` | Einstellungen und Kategorien (lokal, nicht im Git); Vorlagen: `config.example.yaml`, `kategorien.example.yaml` |
+| `config.yaml`, `categories.yaml` | Einstellungen und Kategorien (lokal, nicht im Git); Vorlagen: `config.example.yaml`, `categories.example.yaml` |
 | `mise.toml` | Werkzeuge (`uv`, `terminal-notifier`, `jq`) und Tasks |
-| `kalender/` | Quelle und Build-Skript des Kalender-Hilfsprogramms (`bin/Debrief Kalender.app`, nicht im Git) |
+| `calendar/` | Quelle und Build-Skript des Kalender-Hilfsprogramms (`bin/Debrief Calendar.app`, nicht im Git) |
 | `launchd.plist.template`, `install.sh`, `bin/debrief` | Dienst-Einrichtung; das Startskript sorgt dafür, dass macOS den Dienst unter eigenem Namen statt als „mise“ anzeigt |
 | `pending/` | offene Vorschläge (JSON, eine Datei pro Transkript) |
-| `gelernt.json`, `abgelegt.json` | gelernte Korrekturen und Namen, Verlauf „Zuletzt abgelegt“ (lokal, nicht im Git) |
+| `learned.json`, `filed.json` | gelernte Korrekturen und Namen, Verlauf „Zuletzt abgelegt“ (lokal, nicht im Git) |
 | `debrief.log`, `launchd.log` | Logs |
 
 ## Fehlerbehebung

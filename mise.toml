@@ -64,11 +64,11 @@ fi
 uv run --script server.py
 '''
 
-[tasks.kalender-zugriff]
+[tasks.calendar-access]
 description = "Kalenderzugriff für das Hilfsprogramm anfragen bzw. prüfen"
 shell = "bash -c"
 run = '''
-out=$(mktemp); open -W -n --stdout "$out" "$PWD/bin/Debrief Kalender.app" --args --auth; cat "$out"; rm -f "$out"
+out=$(mktemp); open -W -n --stdout "$out" "$PWD/bin/Debrief Calendar.app" --args --auth; cat "$out"; rm -f "$out"
 '''
 
 [tasks.dry-run]

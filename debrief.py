@@ -65,14 +65,14 @@ def normalize_kategorien(kategorien: dict) -> dict:
 def load_config(path: Path) -> dict:
     cfg = yaml.safe_load(path.read_text())
     cfg["vault"] = Path(cfg["vault"]).expanduser()
-    cfg["kategorien_datei"] = path.parent / "kategorien.yaml"
+    cfg["kategorien_datei"] = path.parent / "categories.yaml"
     cfg["kategorien"] = normalize_kategorien(cfg.get("kategorien") or {})
     reload_kategorien(cfg)
     return cfg
 
 
 def reload_kategorien(cfg: dict) -> None:
-    """kategorien.yaml neu einlesen, falls sie seit dem letzten Laden geändert wurde (z. B. von Hand)."""
+    """categories.yaml neu einlesen, falls sie seit dem letzten Laden geändert wurde (z. B. von Hand)."""
     path = cfg["kategorien_datei"]
     if not path.exists():
         return
@@ -109,7 +109,7 @@ def split_frontmatter(text: str) -> tuple[dict, str]:
     return yaml.safe_load(m.group(1)) or {}, text[m.end():]
 
 
-GELERNT = HERE / "gelernt.json"  # Korrekturen und Namen aus dem Review (lokal, nicht im Git)
+GELERNT = HERE / "learned.json"  # Korrekturen und Namen aus dem Review (lokal, nicht im Git)
 MAX_KORREKTUREN_IM_PROMPT = 15
 SPEAKER_RE = re.compile(r"^Speaker \d+$")
 
@@ -197,7 +197,7 @@ def korrekturen_prompt(cfg: dict) -> str:
 
 # --- Duplikate ---------------------------------------------------------------
 
-FINGERABDRUECKE = HERE / "fingerabdruecke.json"  # abgelegte Transkripte (lokal, nicht im Git)
+FINGERABDRUECKE = HERE / "fingerprints.json"  # abgelegte Transkripte (lokal, nicht im Git)
 SKETCH_K = 128      # Größe der Bottom-k-Skizze für die Ähnlichkeit
 SHINGLE = 3         # Wortgruppen-Länge (3 verträgt Abweichungen einer erneuten Transkription)
 
@@ -293,7 +293,7 @@ def find_duplicate(fp: dict, others: list[dict]) -> tuple[float, dict | None]:
     return best, match
 
 
-KALENDER_APP = HERE / "bin" / "Debrief Kalender.app"
+KALENDER_APP = HERE / "bin" / "Debrief Calendar.app"
 MAX_TERMIN_STUNDEN = 4  # längere Einträge (Messen, Urlaub) sind keine Besprechungen
 
 
@@ -755,7 +755,7 @@ def link_line(meta: dict, result: dict, cfg: dict) -> str:
 
 
 def canonical_names(cfg: dict, result: dict) -> dict:
-    """Projekt- und Personennamen auf die Schreibweise aus kategorien.yaml bringen („pfk“ → „pFK“)."""
+    """Projekt- und Personennamen auf die Schreibweise aus categories.yaml bringen („pfk“ → „pFK“)."""
     cat = cfg["kategorien"].get(result.get("kategorie"))
     if not cat:
         return result

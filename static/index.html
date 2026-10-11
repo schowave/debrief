@@ -482,9 +482,9 @@
   </div>
   <div class="db">
     <section role="tabpanel" data-panel="kategorien">
-      <p data-t-html>Datei <code>kategorien.yaml</code>. Schlüssel = Wert für <code>kunde</code>; <code>projekte</code> werden Unterordner,
+      <p data-t-html>Datei <code>categories.yaml</code>. Schlüssel = Wert für <code>kunde</code>; <code>projekte</code> werden Unterordner,
          <code>personen</code> darunter nochmals. <code>hinweise</code> helfen dem Modell beim Zuordnen.</p>
-      <textarea class="textarea yaml" id="cats-yaml" spellcheck="false" aria-label="kategorien.yaml"></textarea>
+      <textarea class="textarea yaml" id="cats-yaml" spellcheck="false" aria-label="categories.yaml"></textarea>
       <div class="error-box" id="cats-error" role="alert" hidden style="margin-top:12px"></div>
       <div class="panel-actions"><span class="spacer"></span><button class="btn primary" id="cats-save">Kategorien speichern</button></div>
     </section>
@@ -507,7 +507,7 @@
       <div class="panel-actions"><input class="input" id="name-add" placeholder="Name hinzufügen und Enter" style="max-width:320px" aria-label="Name hinzufügen"></div>
     </section>
     <section role="tabpanel" data-panel="verlauf" hidden>
-      <p data-t-html>Zuletzt abgelegte Notizen (Datei <code>abgelegt.json</code>, max. 30). Entfernen löscht nur den Eintrag hier, nicht die Notiz.</p>
+      <p data-t-html>Zuletzt abgelegte Notizen (Datei <code>filed.json</code>, max. 30). Entfernen löscht nur den Eintrag hier, nicht die Notiz.</p>
       <ul class="list-rows" id="verlauf" data-dyn></ul>
       <div class="panel-actions"><span class="spacer"></span><button class="btn ghost" id="verlauf-clear"><svg class="i"><use href="#i-trash"/></svg> Verlauf leeren</button></div>
     </section>
@@ -1740,7 +1740,7 @@ $$("#settings [role=tab]").forEach(t => {
 async function openSettings(tab) {
   ["cats-error", "config-error"].forEach(id => $("#" + id).hidden = true);
   try {
-    const [cats, conf, gelernt] = await Promise.all([api("/api/kategorien.yaml"), api("/api/config.yaml"), api("/api/gelernt")]);
+    const [cats, conf, gelernt] = await Promise.all([api("/api/categories.yaml"), api("/api/config.yaml"), api("/api/gelernt")]);
     $("#cats-yaml").value = yamlBase["cats-yaml"] = cats.yaml;
     $("#config-yaml").value = yamlBase["config-yaml"] = conf.yaml;
     renderKorrekturen(gelernt.korrekturen);
@@ -1771,7 +1771,7 @@ $("#cats-save").onclick = async e => {
   const btn = e.currentTarget; busy(btn, true); $("#cats-error").hidden = true;
   try {
     renderedKey = null;
-    setState(await api("/api/kategorien.yaml", { yaml: $("#cats-yaml").value }));
+    setState(await api("/api/categories.yaml", { yaml: $("#cats-yaml").value }));
     yamlBase["cats-yaml"] = $("#cats-yaml").value; toast(t("Kategorien gespeichert"));
   } catch (err) { $("#cats-error").textContent = err.message; $("#cats-error").hidden = false; }
   busy(btn, false);

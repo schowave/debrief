@@ -1,6 +1,6 @@
-// Debrief Kalender: liefert Termine eines Zeitraums als JSON (für den Debrief).
-//   kalender --auth                     Zugriff anfragen (einmalig, zeigt den macOS-Dialog)
-//   kalender --von <ISO> --bis <ISO>    Termine, die den Zeitraum überschneiden (Ortszeit, yyyy-MM-ddTHH:mm:ss)
+// Debrief Calendar: liefert Termine eines Zeitraums als JSON (für den Debrief).
+//   calendar --auth                     Zugriff anfragen (einmalig, zeigt den macOS-Dialog)
+//   calendar --von <ISO> --bis <ISO>    Termine, die den Zeitraum überschneiden (Ortszeit, yyyy-MM-ddTHH:mm:ss)
 import EventKit
 import Foundation
 
@@ -21,7 +21,7 @@ var granted = false
 store.requestFullAccessToEvents { ok, _ in granted = ok; done.signal() }
 done.wait()
 if !granted {
-    emit(["fehler": "Kein Zugriff auf den Kalender – Systemeinstellungen → Datenschutz & Sicherheit → Kalender → „Debrief Kalender“ erlauben"], code: 2)
+    emit(["fehler": "Kein Zugriff auf den Kalender – Systemeinstellungen → Datenschutz & Sicherheit → Kalender → „Debrief Calendar“ erlauben"], code: 2)
 }
 if args.contains("--auth") { emit(["ok": true]) }
 

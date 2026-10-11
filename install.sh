@@ -42,12 +42,12 @@ mise install
 
 # Kalender-Hilfsprogramm: nur neu bauen, wenn sich der Code geändert hat – macOS bindet die
 # Kalender-Erlaubnis an genau diesen Build und würde sonst erneut fragen.
-APP="$DIR/bin/Debrief Kalender.app"
-HASH="$(shasum kalender/main.swift kalender/build.sh | shasum | cut -c1-16)"
+APP="$DIR/bin/Debrief Calendar.app"
+HASH="$(shasum calendar/main.swift calendar/build.sh | shasum | cut -c1-16)"
 if command -v swiftc >/dev/null; then
-  if [[ "$(cat "$DIR/bin/.kalender-build-hash" 2>/dev/null)" != "$HASH" ]]; then
-    kalender/build.sh "$DIR/bin" >/dev/null
-    echo "$HASH" > "$DIR/bin/.kalender-build-hash"
+  if [[ "$(cat "$DIR/bin/.calendar-build-hash" 2>/dev/null)" != "$HASH" ]]; then
+    calendar/build.sh "$DIR/bin" >/dev/null
+    echo "$HASH" > "$DIR/bin/.calendar-build-hash"
     echo "Kalender-Hilfsprogramm gebaut – macOS fragt gleich nach dem Kalenderzugriff (bitte erlauben)."
   fi
   OUT="$(mktemp)"
