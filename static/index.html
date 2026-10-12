@@ -293,7 +293,12 @@
           padding: 10px 0; border-bottom: 1px solid var(--line); }
   .todo:last-of-type { border-bottom: 0; }
   .todo.done .task { text-decoration: line-through; color: var(--muted); }
-  .todo.done .seg-toggle, .todo.done .date-btn, .todo.done .who-row { opacity: .55; }
+  .when { display: inline-flex; align-items: center; gap: 6px; }
+  .urgent-btn { width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--muted); cursor: pointer; }
+  .urgent-btn:hover { background: var(--surface-2); color: var(--text); }
+  .urgent-btn[aria-checked="true"] { color: var(--danger); border-color: var(--danger); }
+  .urgent-btn[aria-checked="true"] svg { fill: currentColor; }
+  .todo.done .seg-toggle, .todo.done .when, .todo.done .who-row { opacity: .55; }
   .todo .task { border-color: transparent; background: none; resize: none; overflow: hidden; line-height: 1.45; }
   .textarea.grow { resize: none; overflow: hidden; }
   .md { padding: 10px 12px; margin: 0 -12px; border-radius: 8px; cursor: text; line-height: 1.6;
@@ -415,7 +420,7 @@
     .todo .seg-toggle { grid-column: 2; grid-row: 1; justify-self: start; }
     .todo .icon-btn { grid-column: 3; grid-row: 1; }
     .todo .task { grid-column: 1 / -1; grid-row: 2; }
-    .todo .date-btn { grid-column: 1 / -1; grid-row: 3; justify-self: start; }
+    .todo .when { grid-column: 1 / -1; grid-row: 3; justify-self: start; }
     .todo .who-row { grid-column: 1 / -1; grid-row: 4; }
     .newcat { grid-template-columns: 1fr; }
     .spk { grid-template-columns: 1fr; }
@@ -433,6 +438,7 @@
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4"/><path d="M4 4h14l-3 5 3 5H4"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
   <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -1212,8 +1218,10 @@ function renderTodos(item, d) {
         <button class="me" role="radio" aria-checked="${td.ist_meins}" data-me="1">${t("Ich")}</button>
         <button role="radio" aria-checked="${!td.ist_meins}" data-me="0">${t("Andere")}</button></div>
       <textarea class="input task grow" rows="1" placeholder="${t("Was ist zu tun?")}" aria-label="${t("Aufgabe")}">${esc(td.aufgabe)}</textarea>
-      <button class="date-btn ${td.faellig ? (td.faellig < todayIso() ? "overdue" : "") : "empty"}" aria-haspopup="dialog">
-        ${icon("cal")}<span>${esc(fmtDate(td.faellig))}</span></button>
+      <div class="when">
+        <button class="urgent-btn" role="switch" aria-checked="${!!td.dringend}" aria-label="${t("Dringend")}" title="${t("Als dringend markieren")}">${icon("flag")}</button>
+        <button class="date-btn ${td.faellig ? (td.faellig < todayIso() ? "overdue" : "") : "empty"}" aria-haspopup="dialog">
+          ${icon("cal")}<span>${esc(fmtDate(td.faellig))}</span></button></div>
       <button class="icon-btn danger" aria-label="${t("Todo entfernen")}">${icon("trash")}</button>
       ${td.ist_meins ? "" : `<div class="who-row"><span>${t("Verantwortlich")}</span><div class="combo"></div></div>`}
     </div>`).join("");
@@ -1231,6 +1239,10 @@ function renderTodos(item, d) {
       persist(item); renderTodos(item, d);
       $$("#todos .todo")[i]?.querySelector(todo.ist_meins ? ".task" : ".combo input")?.focus();
     });
+    $(".urgent-btn", row).onclick = e => {
+      todo.dringend = !todo.dringend; persist(item);
+      e.currentTarget.setAttribute("aria-checked", todo.dringend);
+    };
     $(".task", row).oninput = e => { todo.aufgabe = e.target.value.replace(/\n/g, " "); persist(item); };
     $(".task", row).onkeydown = e => { if (e.key === "Enter" && !(e.metaKey || e.ctrlKey)) { e.preventDefault(); $("#todo-add").click(); } };
     $(".date-btn", row).onclick = e => datePicker(e.currentTarget, todo.faellig, v => { todo.faellig = v; persist(item); renderTodos(item, d); });

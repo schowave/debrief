@@ -6,55 +6,16 @@
       "colType": "dated",
       "active": true,
       "collapsed": false,
-      "name": "Überfällig",
+      "name": "Fällig",
       "datedBasedColumn": {
         "dateType": "due",
         "from": -300,
-        "to": -1
+        "to": 7
       }
     },
     {
       "id": 2026101202,
       "index": 2,
-      "colType": "dated",
-      "active": true,
-      "collapsed": false,
-      "name": "Heute",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": 0,
-        "to": 0
-      }
-    },
-    {
-      "id": 2026101203,
-      "index": 3,
-      "colType": "dated",
-      "active": true,
-      "collapsed": false,
-      "name": "Morgen",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": 1,
-        "to": 1
-      }
-    },
-    {
-      "id": 2026101204,
-      "index": 4,
-      "colType": "dated",
-      "active": true,
-      "collapsed": false,
-      "name": "Diese Woche",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": 2,
-        "to": 7
-      }
-    },
-    {
-      "id": 2026101205,
-      "index": 5,
       "colType": "dated",
       "active": true,
       "collapsed": false,
@@ -66,8 +27,8 @@
       }
     },
     {
-      "id": 2026101206,
-      "index": 6,
+      "id": 2026101203,
+      "index": 3,
       "colType": "undated",
       "active": true,
       "collapsed": false,
@@ -79,8 +40,8 @@
       }
     },
     {
-      "id": 2026101207,
-      "index": 7,
+      "id": 2026101204,
+      "index": 4,
       "colType": "completed",
       "active": true,
       "collapsed": true,
@@ -98,9 +59,9 @@
     "filterGroups": []
   },
   "swimlanes": {
-    "enabled": false,
-    "hideEmptySwimlanes": false,
-    "property": "tags",
+    "enabled": true,
+    "hideEmptySwimlanes": true,
+    "property": "folderPath",
     "sortCriteria": "asc",
     "minimized": [],
     "maxHeight": "300px",

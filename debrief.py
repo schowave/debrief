@@ -696,6 +696,8 @@ def format_todo(todo: dict, ich: str) -> str:
         line += f" (@{who})"
     if todo.get("faellig"):
         line += f" 📅 {todo['faellig']}"  # format of the Obsidian Tasks plugin
+    if todo.get("dringend"):
+        line += " ⏫"  # Tasks priority "high", shown by Task Board
     if todo.get("erledigt"):  # file directly as done (Tasks: ✅ done date)
         if todo["ist_meins"]:
             return f"- [x] {line} ✅ {dt.date.today().isoformat()}"

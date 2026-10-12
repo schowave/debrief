@@ -155,6 +155,8 @@ const EN = {
   "Was ist zu tun?": "What needs to be done?",
   "Aufgabe": "Task",
   "Todo entfernen": "Remove todo",
+  "Dringend": "Urgent",
+  "Als dringend markieren": "Mark as urgent",
   "Todo entfernt": "Todo removed",
   "Verantwortlich": "Assignee",
 
