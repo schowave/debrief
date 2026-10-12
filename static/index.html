@@ -563,6 +563,7 @@
     <button class="cbox" id="imp-all" role="checkbox" aria-checked="false" aria-label="Alle angezeigten auswählen"><svg class="i"><use href="#i-check"/></svg></button>
     <span id="imp-count" style="font-size:14px;color:var(--muted)"></span>
     <span class="spacer"></span>
+    <button class="btn ghost" id="imp-paste" title="Text aus der Zwischenablage übernehmen, z. B. einen Teams-Chat – oder auf der Seite ⌘V drücken"><svg class="i"><use href="#i-plus"/></svg> Einfügen</button>
     <button class="btn ghost" id="imp-files" title="Einzelne Dateien hochladen – oder einfach auf die Seite ziehen"><svg class="i"><use href="#i-plus"/></svg> Dateien wählen …</button>
     <button class="btn" data-close>Abbrechen</button>
     <button class="btn primary" id="imp-go" disabled><svg class="i"><use href="#i-import"/></svg> Importieren</button>
@@ -1738,6 +1739,27 @@ window.addEventListener("drop", e => {
   e.preventDefault(); dragDepth = 0; $("#drop").classList.remove("show");
   uploadFiles(e.dataTransfer.files);
 });
+async function pasteText(text) {
+  if (!(text || "").trim()) { toast(t("Die Zwischenablage enthält keinen Text"), true); return; }
+  try {
+    const res = await api("/api/import/einfuegen", { text });
+    setState(res.state);
+    if (importDlg.open) importDlg.close();
+    toast(t("Text aus der Zwischenablage in die Inbox gelegt – Analyse läuft"));
+    const first = res.state.items.find(i => i.datei === res.importiert[0]);
+    if (first) select(first.id);
+  } catch (e) { toast(e.message, true); }
+}
+// ⌘V outside of input fields imports the clipboard
+window.addEventListener("paste", e => {
+  const el = e.target;
+  if (el.closest?.("input, textarea, select, [contenteditable]") || e.clipboardData?.files?.length) return;
+  e.preventDefault(); pasteText(e.clipboardData?.getData("text/plain"));
+});
+$("#imp-paste").onclick = async () => {
+  try { pasteText(await navigator.clipboard.readText()); }
+  catch { toast(t("Kein Zugriff auf die Zwischenablage – bitte ⌘V auf der Seite drücken"), true); }
+};
 $("#imp-files").onclick = () => $("#file-pick").click();
 $("#file-pick").onchange = e => { uploadFiles(e.target.files); e.target.value = ""; };
 

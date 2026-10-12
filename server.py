@@ -730,6 +730,11 @@ def make_handler(store: Store):
                         log.info("Uploaded: %s", ", ".join(names))
                         store.scan()
                     self.send_json({"importiert": names, "fehler": fehler, "state": self.state()})
+                elif path == "/api/import/einfuegen":
+                    name = importer.paste_to_inbox(cfg, body.get("text") or "", body.get("titel") or "")
+                    log.info("Pasted: %s", name)
+                    store.scan()
+                    self.send_json({"importiert": [name], "state": self.state()})
                 elif path == "/api/import/ordner-waehlen":
                     picked = importer.choose_folders()
                     current = [str(f) for f in importer.folders(cfg)]

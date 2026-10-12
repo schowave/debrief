@@ -176,6 +176,32 @@ def upload_to_inbox(cfg: dict, filename: str, text: str, modified_ms: int | None
     return write_inbox(cfg, path.stem, meta, body, speakers, recorded_at(meta, path, modified), f"Upload: {path.name}")
 
 
+# Teams chat header: "Max Mustermann  12:34", "Max Mustermann 12.10.2026 12:34" or "[12:34] Max Mustermann"
+CHAT_HEADER = re.compile(r"^(?:\[?(?:\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\]?\s+(?P<a>[^\d\W][\w.' -]{1,60}?)"
+                         r"|(?P<b>[^\d\W][\w.' -]{1,60}?)\s+\[?(?:\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\]?)\s*$")
+
+
+def normalize_chat(text: str) -> str:
+    """Pasted chat (Teams): turns \"Name  12:34\" header lines into the speaker-alone-on-a-line format of the transcripts."""
+    out = []
+    for line in text.replace("\r\n", "\n").splitlines():
+        m = CHAT_HEADER.match(line.strip())
+        out.append((m["a"] or m["b"]).strip() if m else line.rstrip())
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip()
+
+
+def paste_to_inbox(cfg: dict, text: str, title: str = "") -> str:
+    """Put text from the clipboard (transcript or chat history) into the inbox."""
+    if len(text.encode()) > MAX_BYTES:
+        raise ValueError("Pasted text is too large")
+    body = normalize_chat(text)
+    if not body:
+        raise ValueError("Nothing to import: the pasted text is empty")
+    now = dt.datetime.now().replace(microsecond=0)
+    stem = title.strip() or f"Chat {now:%Y-%m-%d %H-%M}"
+    return write_inbox(cfg, stem, {"Source App": "Clipboard"}, body, detect_speakers(body), now, "Clipboard")
+
+
 def write_inbox(cfg: dict, stem: str, meta: dict, body: str, speakers: list[str], recorded: dt.datetime,
                 origin: str) -> str:
     inbox = cfg["vault"] / cfg["inbox"]
