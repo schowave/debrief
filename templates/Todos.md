@@ -1,6 +1,6 @@
 # Todos
 
-Benötigt das Community-Plugin **Tasks**. Gruppiert nach Ordner (Kunde / Projekt) und Notiz – ohne JavaScript.
+Benötigt das Community-Plugin **Tasks**. Gruppiert nach Projektordner – ohne JavaScript. Jede Aufgabe verlinkt am Ende auf das Gespräch, aus dem sie stammt.
 
 ## Überfällig & heute
 
@@ -8,7 +8,6 @@ Benötigt das Community-Plugin **Tasks**. Gruppiert nach Ordner (Kunde / Projekt
 not done
 due before tomorrow
 group by folder
-group by filename
 sort by due
 hide backlink
 hide edit button
@@ -23,7 +22,6 @@ not done
 due after today
 due before in 8 days
 group by folder
-group by filename
 sort by due
 hide backlink
 hide edit button
@@ -37,7 +35,6 @@ hide task count
 not done
 due after in 7 days
 group by folder
-group by filename
 sort by due
 hide backlink
 hide edit button
@@ -51,7 +48,6 @@ hide task count
 not done
 no due date
 group by folder
-group by filename
 hide backlink
 hide edit button
 hide postpone button
