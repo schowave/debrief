@@ -1756,7 +1756,7 @@ window.addEventListener("drop", e => {
   uploadFiles(e.dataTransfer.files);
 });
 async function pasteText(text, titel = "") {
-  if (!(text || "").trim()) { toast(t("Die Zwischenablage enthält keinen Text"), true); return; }
+  if (!(text || "").trim()) { toast(t("Die Zwischenablage enthält keinen Text"), true); return false; }
   try {
     const res = await api("/api/import/einfuegen", { text, titel });
     setState(res.state);
@@ -1764,7 +1764,8 @@ async function pasteText(text, titel = "") {
     toast(t("Text aus der Zwischenablage in die Inbox gelegt – Analyse läuft"));
     const first = res.state.items.find(i => i.datei === res.importiert[0]);
     if (first) select(first.id);
-  } catch (e) { toast(e.message, true); }
+    return true;
+  } catch (e) { toast(e.message, true); return false; }
 }
 // ⌘V outside of input fields imports the clipboard
 window.addEventListener("paste", e => {
@@ -1782,8 +1783,9 @@ pasteArea.oninput = pasteUpdate;
 $$("[data-close]", pasteDlg).forEach(b => b.onclick = () => pasteDlg.close());
 $("#imp-type").onclick = () => { importDlg.close(); pasteDlg.showModal(); pasteUpdate(); pasteArea.focus(); };
 $("#paste-go").onclick = async () => {
-  await pasteText(pasteArea.value, $("#paste-name").value);
-  if (!pasteDlg.open) return;
+  if (!await pasteText(pasteArea.value, $("#paste-name").value)) return;
+  pasteArea.value = ""; $("#paste-name").value = ""; pasteUpdate();
+  pasteDlg.close();
 };
 $("#imp-paste").onclick = async () => {
   try { pasteText(await navigator.clipboard.readText()); }
