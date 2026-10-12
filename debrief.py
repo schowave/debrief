@@ -750,6 +750,9 @@ def render(meta: dict, body: str, result: dict, cfg: dict, reviewed: bool = Fals
         parts.append("## Entscheidungen\n\n" + "\n".join(f"- {e}" for e in result["entscheidungen"]))
     if mine:
         parts.append("## Meine Todos\n\n" + "\n".join(format_todo(t, cfg["ich"]) for t in mine))
+    if moved := result.get("todos_verschoben"):
+        parts.append("## Meine Todos\n\n" + "\n".join(
+            f"- {m['anzahl']} in [[{m['link']}|Todos {m['projekt']}]]" for m in moved))
     if others:
         parts.append("## Todos anderer\n\n" + "\n".join(format_todo(t, cfg["ich"]) for t in others))
     if (mail := result.get("followup")) and mail.get("text", "").strip():
@@ -829,43 +832,42 @@ def write_note(path: Path, cfg: dict, result: dict, reviewed: bool = False, name
     """Creates the finished note in the target folder and removes the original from the inbox."""
     meta, body = rename_speakers(*split_frontmatter(path.read_text()), names)
     result = canonical_names(cfg, rename_in_result(result, names))
-    result, elsewhere = split_foreign_todos(cfg, result)
+    result, routed = route_todos(cfg, result, reviewed)
     dest = target_path(cfg, meta, result, reviewed)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    for projekt, todos in elsewhere.items():
-        write_project_todos(cfg, meta, result, projekt, todos, dest, reviewed)
+    result["todos_verschoben"] = [file_project_todos(cfg, result, projekt, todos, dest, reviewed)
+                                  for projekt, todos in routed.items()]
     dest.write_text(render(meta, body, result, cfg, reviewed))
     path.unlink()
     return dest
 
 
-def split_foreign_todos(cfg: dict, result: dict) -> tuple[dict, dict[str, list[dict]]]:
-    """Todos assigned to another known project of the same customer are filed there, not in this conversation's note."""
+def route_todos(cfg: dict, result: dict, reviewed: bool = False) -> tuple[dict, dict[str, list[dict]]]:
+    """My todos belong into the `Todos.md` of their project (the todo's own or the conversation's), the rest stays in the note."""
     cat = cfg["kategorien"].get(result["kategorie"])
-    known = {name.casefold(): name for name in cat["projekte"]} if cat else {}
-    keep, elsewhere = [], {}
+    filed = target_folder(cfg, result, reviewed) != cfg["unklar_ordner"]  # unclear notes keep their todos
+    known = {name.casefold(): name for name in cat["projekte"]} if cat and filed else {}
+    keep, routed = [], {}
     for t in result.get("todos", []):
-        target = known.get((t.get("projekt") or "").strip().casefold())
-        if target and target != result.get("projekt"):
-            elsewhere.setdefault(target, []).append(t)
+        target = known.get((t.get("projekt") or result.get("projekt") or "").strip().casefold())
+        clean = {k: v for k, v in t.items() if k != "projekt"}
+        if target and t.get("ist_meins"):
+            routed.setdefault(target, []).append(clean)
         else:
-            keep.append({k: v for k, v in t.items() if k != "projekt"})
-    return {**result, "todos": keep}, elsewhere
+            keep.append(clean)
+    return {**result, "todos": keep}, routed
 
 
-def write_project_todos(cfg: dict, meta: dict, result: dict, projekt: str, todos: list[dict], source: Path,
-                        reviewed: bool) -> Path:
-    """Small note in the folder of `projekt` that holds the todos from this conversation and links back to it."""
-    sub = {**result, "projekt": projekt, "person": None}
-    folder = safe_folder(cfg, target_folder(cfg, sub, reviewed))
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"{source.stem} Todos.md"
-    todos = [{k: v for k, v in t.items() if k != "projekt"} for t in todos]
-    fm = yaml.safe_dump({"kunde": result["kategorie"], "projekt": projekt, "tags": ["todos"]},
-                        sort_keys=False, allow_unicode=True)
-    lines = "\n".join(format_todo(t, cfg["ich"]) for t in todos)
-    path.write_text(f"---\n{fm}---\n\n**Gespräch:** [[{source.stem}]]\n\n## Todos\n\n{lines}\n")
-    return path
+def file_project_todos(cfg: dict, result: dict, projekt: str, todos: list[dict], source: Path, reviewed: bool) -> dict:
+    """Appends the todos to `Todos.md` of the project folder (with a link back to the conversation)."""
+    folder = safe_folder(cfg, f"{cfg['kategorien'][result['kategorie']]['ordner']}/{projekt}")
+    ensure_project_todo_notes(cfg)
+    note = folder / "Todos.md"
+    text = note.read_text().rstrip("\n") + "\n"
+    text += "".join(f"{format_todo(t, cfg['ich'])} [[{source.stem}]]\n" for t in todos)
+    note.write_text(text)
+    link = str(note.relative_to(safe_folder(cfg, ".")).with_suffix(""))
+    return {"projekt": projekt, "link": link, "anzahl": len(todos)}
 
 
 def process(path: Path, cfg: dict, dry_run: bool) -> None:
