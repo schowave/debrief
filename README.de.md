@@ -2,9 +2,33 @@
 
 [English](README.md) · **Deutsch**
 
-Debrief sortiert [MacWhisper](https://goodsnooze.gumroad.com/l/macwhisper)-Transkripte im Obsidian-Vault nach Kunde bzw. internem Thema und
-extrahiert Zusammenfassung, Entscheidungen und Todos. Nichts landet ungeprüft in Obsidian:
-jeder Vorschlag wird auf einer lokalen Review-Seite bestätigt oder korrigiert.
+**Jede Besprechungsaufnahme landet nach einem kurzen Review am richtigen Ort in deinem Obsidian-Vault – mit Zusammenfassung, Entscheidungen und Todos.**
+
+![Debrief-Ablauf: von der MacWhisper-Aufnahme zur abgelegten Notiz](docs/demo.gif)
+
+*Demo mit erfundenen Daten: Aus einer Aufnahme wird eine Notiz in `Clients/Acme/platform-migration/Erika Mustermann/`.*
+
+## Wozu Debrief
+
+Besprechungen aufzunehmen ist einfach. Sie nutzbar zu machen ist die Arbeit: Transkripte stapeln sich im
+Eingang, niemand liest sie noch einmal, Todos stecken im Fließtext, und das manuelle Ablegen fällt als Erstes weg.
+
+Debrief macht aus dem Stapel eine Wissensbasis, die du wirklich nutzt:
+
+| Ohne Debrief | Mit Debrief |
+|---|---|
+| Transkripte liegen ungelesen in einem Ordner | Jedes ist nach Kunde, Projekt und Person dort abgelegt, wo du es suchen würdest |
+| Todos stecken irgendwo in 40 Minuten Text | Deine Todos sind `- [ ]`-Kästchen für das Obsidian-Plugin *Tasks*, die der anderen nennen Zuständige und Termin |
+| „Was haben wir entschieden?“ heißt im Transkript suchen | Zusammenfassung und Entscheidungen stehen oben in jeder Notiz |
+| Sprecher heißen „Speaker 1“ und „Speaker 2“ | Das Modell schlägt vor, wer wer ist (nach Anrede und Kalendereinladung) |
+| Die Folge-Mail schreibst du aus dem Gedächtnis | Ein Entwurf entsteht aus Zusammenfassung, Entscheidungen und Todos |
+| Alles einer KI zu überlassen heißt blind vertrauen | Nichts wird abgelegt, bevor du es auf einer lokalen Review-Seite bestätigt hast; deine Korrekturen lehren das Modell |
+| Vertrauliche Gespräche verlassen das Haus | Optional läuft alles über ein selbst betriebenes LiteLLM-kompatibles Gateway, die Transkripte bleiben im Haus |
+
+Du prüfst einen Vorschlag, statt von Hand abzulegen, und das Ergebnis ist
+schlichtes Markdown in deinem eigenen Vault: kein Lock-in, keine neue App, in der du leben musst.
+
+## So funktioniert es
 
 ```
 MacWhisper ──(Obsidian-Integration)──▶ Vault/transkripts/

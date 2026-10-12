@@ -2,9 +2,33 @@
 
 **English** · [Deutsch](README.de.md)
 
-Debrief files your [MacWhisper](https://goodsnooze.gumroad.com/l/macwhisper) transcripts in your
-[Obsidian](https://obsidian.md) vault – sorted by client, project and person, with summary, decisions and
-todos. Nothing lands in Obsidian unchecked: every suggestion is confirmed or corrected on a local review page first.
+**Every meeting recording, filed in the right place in your Obsidian vault – with summary, decisions and todos – after one quick review.**
+
+![Debrief walkthrough: from a MacWhisper recording to a filed note](docs/demo.gif)
+
+*Demo with invented data: a recording becomes a note in `Clients/Acme/platform-migration/Erika Mustermann/`.*
+
+## Why Debrief
+
+Recording meetings is easy. Making them useful is the work: transcripts pile up in an inbox, nobody reads
+them again, todos stay buried in the text, and filing them by hand is the first thing that gets skipped.
+
+Debrief turns that pile into a knowledge base you can actually use:
+
+| Without Debrief | With Debrief |
+|---|---|
+| Transcripts sit unread in one folder | Each one is filed by client, project and person, where you would look for it |
+| Todos are somewhere in 40 minutes of text | Your todos are `- [ ]` checkboxes for the Obsidian *Tasks* plugin, others' todos list their owner and due date |
+| "What did we decide?" means searching the transcript | Summary and decisions are at the top of every note |
+| Speakers are "Speaker 1" and "Speaker 2" | The model suggests who is who, based on how people are addressed and on the calendar invitees |
+| The follow-up email is written from memory | A draft is generated from the summary, decisions and todos |
+| Handing everything to an AI means trusting it blindly | Nothing is filed before you confirmed it on a local review page; your corrections teach the model |
+| Sensitive conversations leave the building | Optionally runs on a self-hosted LiteLLM-compatible gateway, so transcripts stay in-house |
+
+You review a suggestion instead of filing by hand, and the result is
+plain Markdown in your own vault: no lock-in, no new app to live in.
+
+## How it works
 
 ```
 MacWhisper ──(Obsidian integration)──▶ Vault/transkripts/
@@ -23,14 +47,14 @@ MacWhisper ──(Obsidian integration)──▶ Vault/transkripts/
 
 - **Automatic sorting** into categories, projects and people, with a short reasoning and a confidence value
 - **Review page** (German/English, switchable in the header) to correct everything before it is filed
-- **Summary, decisions, tags and todos** – your todos become `- [ ]` checkboxes for the Obsidian *Tasks* plugin
-- **Speaker naming** with AI suggestions based on how people are addressed and on the calendar invitees
+- **Summary, decisions, tags and todos**, written in the language of the conversation
+- **Speaker naming** with AI suggestions; the names replace the placeholders everywhere in the note
 - **Calendar context:** the matching macOS calendar event (title, organiser, invitees) is passed to the model
 - **Follow-up email draft** (formal/informal, German/English) that you can copy or open in your mail client
 - **Learns from corrections:** your last corrections are sent along as examples
 - **Duplicate detection**, import of older transcripts (folder search or drag & drop), keyboard shortcuts
 - **Event driven**, no polling: FSEvents for the inbox, Server-Sent Events for the page
-- **Privacy-friendly:** works with a self-hosted LiteLLM-compatible gateway so transcripts stay in-house
+- **Private by default:** the page only listens on `127.0.0.1`; configuration and learned data stay local
 
 ## Requirements
 
@@ -169,6 +193,7 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 | `config.example.yaml`, `categories.example.yaml` | templates for your local `config.yaml` / `categories.yaml` |
 | `calendar/` | source and build script of the calendar helper (`bin/Debrief Calendar.app`, not in git) |
 | `templates/` | Obsidian templates (Bases, Tasks, Task Board) |
+| `docs/demo.gif` | walkthrough animation used in the README (made with invented data) |
 | `install.sh`, `launchd.plist.template`, `bin/debrief` | service setup |
 
 ## Troubleshooting
