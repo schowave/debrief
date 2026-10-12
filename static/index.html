@@ -1257,7 +1257,7 @@ function renderTodos(item, d) {
     $$(".seg-toggle button", row).forEach(b => b.onclick = () => {
       todo.ist_meins = b.dataset.me === "1";
       if (todo.ist_meins) todo.verantwortlich = state.ich;
-      else if (todo.verantwortlich === state.ich) todo.verantwortlich = "";
+      else if (isMe(todo.verantwortlich)) todo.verantwortlich = "";
       persist(item); renderTodos(item, d);
       $$("#todos .todo")[i]?.querySelector(todo.ist_meins ? ".task" : ".combo input")?.focus();
     });
