@@ -44,8 +44,3 @@
 .plugin-tasks-list-item .task-due[data-task-due="past-6d"]::before { content: "📅 seit 6 Tagen"; }
 .plugin-tasks-list-item .task-due[data-task-due="future-7d"]::before { content: "📅 in 7 Tagen"; }
 .plugin-tasks-list-item .task-due[data-task-due="past-7d"]::before { content: "📅 seit 7 Tagen"; }
-
-/* Task Board: swimlane header (project name) must not collapse to zero width */
-.swimlaneHeaderLeftSec, .swimlaneHeaderName { max-width: none; }
-.swimlaneHeaderNameValue { flex: 0 1 auto; max-width: 60vw; }
-.swimlaneHeaderSwimlaneCount { margin-left: .75rem; flex-shrink: 0; }
