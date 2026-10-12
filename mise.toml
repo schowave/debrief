@@ -48,6 +48,10 @@ port=$(sed -n 's/^ *port: *\([0-9]*\).*/\1/p' config.yaml | head -1)
 open "http://${host:-127.0.0.1}:${port:-8765}/"
 '''
 
+[tasks.test]
+description = "Run the tests"
+run = "uv run --no-project --with pytest --with pyyaml python -m pytest -q tests"
+
 [tasks.logs]
 description = "Follow the logs live"
 run = "tail -n 50 -F debrief.log launchd.log"

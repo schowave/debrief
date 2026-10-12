@@ -448,8 +448,9 @@ def build_schema(categories: list[str]) -> dict:
                         "verantwortlich": {"type": ["string", "null"]},
                         "faellig": {"type": ["string", "null"], "description": "YYYY-MM-DD or null"},
                         "ist_meins": {"type": "boolean"},
+                        "dringend": {"type": "boolean"},
                     },
-                    "required": ["aufgabe", "verantwortlich", "faellig", "ist_meins"],
+                    "required": ["aufgabe", "verantwortlich", "faellig", "ist_meins", "dringend"],
                 },
             },
         },
@@ -491,6 +492,8 @@ Extract concrete tasks (todos), commitments and follow-ups. No vague intentions.
 Phrase each todo tersely like a list entry ("Create checklist for agentic projects"); details belong
 in the summary, due date and responsible person in their own fields.
 "ist_meins" = true if {cfg['ich']} takes on the task or it is assigned to him.
+"dringend" = true only if the conversation makes the task explicitly urgent ("today", "asap", "blocking", a deadline
+within the next two days); otherwise false.
 You convert relative deadlines ("by Friday") into a date, counting from the recording date.
 Speakers in the transcript may only be named "Speaker 1" etc.; use real names when they come up in the conversation.
 Under "sprecher_vorschlaege" suggest who is behind a placeholder speaker - only with a concrete clue
@@ -748,11 +751,10 @@ def render(meta: dict, body: str, result: dict, cfg: dict, reviewed: bool = Fals
     ]
     if result["entscheidungen"]:
         parts.append("## Entscheidungen\n\n" + "\n".join(f"- {e}" for e in result["entscheidungen"]))
-    if mine:
-        parts.append("## Meine Todos\n\n" + "\n".join(format_todo(t, cfg["ich"]) for t in mine))
-    if moved := result.get("todos_verschoben"):
-        parts.append("## Meine Todos\n\n" + "\n".join(
-            f"- {m['anzahl']} in [[{m['link']}|Todos {m['projekt']}]]" for m in moved))
+    mine_lines = [format_todo(t, cfg["ich"]) for t in mine] + [
+        moved_line(m["anzahl"], m["link"], m["projekt"]) for m in result.get("todos_verschoben", [])]
+    if mine_lines:
+        parts.append("## Meine Todos\n\n" + "\n".join(mine_lines))
     if others:
         parts.append("## Todos anderer\n\n" + "\n".join(format_todo(t, cfg["ich"]) for t in others))
     if (mail := result.get("followup")) and mail.get("text", "").strip():
@@ -839,7 +841,49 @@ def write_note(path: Path, cfg: dict, result: dict, reviewed: bool = False, name
                                   for projekt, todos in routed.items()]
     dest.write_text(render(meta, body, result, cfg, reviewed))
     path.unlink()
+    try:
+        collect_project_todos(cfg)
+    except Exception:
+        log.exception("Collecting todos into the project todo notes failed")
     return dest
+
+
+MY_TODOS_RE = re.compile(r"(## Meine Todos\n\n)(.*?)(?=\n## |\Z)", re.S)
+TASK_RE = re.compile(r"^- \[[ xX/]\] ")
+
+
+def collect_project_todos(cfg: dict) -> int:
+    """Moves my open checkbox todos from notes in a project folder (e.g. moved there by hand from the unclear
+    folder) into the project's `Todos.md`. Returns the number of moved todos."""
+    vault, moved = safe_folder(cfg, "."), 0
+    for cat in cfg["kategorien"].values():
+        for projekt in cat.get("projekte", {}):
+            folder = safe_folder(cfg, f"{cat['ordner']}/{projekt}")
+            target = folder / "Todos.md"
+            for note in sorted(folder.rglob("*.md")) if folder.is_dir() else []:
+                if note.name == "Todos.md":
+                    continue
+                text = note.read_text()
+                m = MY_TODOS_RE.search(text)
+                if not m:
+                    continue
+                lines = [line for line in m[2].splitlines() if line.strip()]
+                tasks = [line for line in lines if TASK_RE.match(line)]
+                if not tasks:
+                    continue
+                ensure_project_todo_notes(cfg)
+                rest = [line for line in lines if not TASK_RE.match(line)]
+                link = moved_line(len(tasks), str(target.relative_to(vault).with_suffix("")), projekt)
+                target.write_text(target.read_text().rstrip("\n") + "\n"
+                                  + "".join(f"{line} [[{note.stem}]]\n" for line in tasks))
+                note.write_text(text[:m.start(2)] + "\n".join(rest + [link]) + "\n" + text[m.end(2):])
+                log.info("%d todo(s) from %s moved to %s", len(tasks), note.relative_to(vault), target.relative_to(vault))
+                moved += len(tasks)
+    return moved
+
+
+def moved_line(count: int, link: str, projekt: str) -> str:
+    return f"- {count} in [[{link}|Todos {projekt}]]"
 
 
 def route_todos(cfg: dict, result: dict, reviewed: bool = False) -> tuple[dict, dict[str, list[dict]]]:

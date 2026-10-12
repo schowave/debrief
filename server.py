@@ -37,7 +37,7 @@ import urllib.parse
 
 import importer
 
-from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, is_me, analyze, calendar_candidates, find_duplicate, fingerprint,
+from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, collect_project_todos, is_me, analyze, calendar_candidates, find_duplicate, fingerprint,
                        followup, gateway_models, index_vault, load_fingerprints, save_fingerprints, set_default_model, is_placeholder_speaker, rename_in_result, load_config, load_gelernt,
                        reload_kategorien, save_gelernt, save_kategorien, speaker_samples, split_frontmatter,
                        word_count, write_note)
@@ -264,6 +264,10 @@ class Store:
                 log.info("Fingerprints recorded for %d filed notes", added)
         except Exception:
             log.exception("Vault index for duplicates failed")
+        try:
+            collect_project_todos(self.cfg)  # notes moved into a project folder by hand
+        except Exception:
+            log.exception("Collecting todos into the project todo notes failed")
         for item in self.all():  # resume analyses left unfinished after a restart
             if item["status"] == "analysiere":
                 self.jobs.put(item["id"])

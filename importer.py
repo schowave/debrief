@@ -177,17 +177,49 @@ def upload_to_inbox(cfg: dict, filename: str, text: str, modified_ms: int | None
 
 
 # Teams chat header: "Max Mustermann  12:34", "Max Mustermann 12.10.2026 12:34" or "[12:34] Max Mustermann"
-CHAT_HEADER = re.compile(r"^(?:\[?(?:\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\]?\s+(?P<a>[^\d\W][\w.' -]{1,60}?)"
-                         r"|(?P<b>[^\d\W][\w.' -]{1,60}?)\s+\[?(?:\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\]?)\s*$")
+_STAMP = (r"\[?(?:(?P<a>\d{1,2})(?P<sep>[./])(?P<b>\d{1,2})[./](?P<y>\d{2,4}),?\s+)?"
+          r"(?P<h>\d{1,2}):(?P<mi>\d{2})(?::\d{2})?(?:\s?(?P<ap>[AP]M))?\]?")
+_WORD = r"(?:[^\W\d_](?<=[A-ZÄÖÜÉ])[\w.'-]*|von|van|de|der|zu)"  # capitalized words, plus name particles
+_NAME = rf"(?P<name>[^\W\d_](?<=[A-ZÄÖÜÉ])[\w.'-]*(?:\s{_WORD}){{0,4}})"
+CHAT_HEADERS = [re.compile(rf"^{_STAMP}\s+{_NAME}\s*$"), re.compile(rf"^{_NAME}\s+{_STAMP}\s*$")]
+
+
+def chat_header(line: str) -> tuple[str, dt.datetime | dt.time] | None:
+    """Speaker and timestamp of a chat header line; a time without date comes back as `dt.time`."""
+    for rx in CHAT_HEADERS:
+        if m := rx.match(line.strip()):
+            hour = int(m["h"]) % 12 + (12 if m["ap"] == "PM" else 0) if m["ap"] else int(m["h"])
+            try:
+                time_ = dt.time(hour, int(m["mi"]))
+                if not m["y"]:
+                    return m["name"].strip(), time_
+                day, month = (int(m["a"]), int(m["b"])) if m["sep"] == "." else (int(m["b"]), int(m["a"]))  # 12/10 = US
+                year = int(m["y"]) + (2000 if len(m["y"]) == 2 else 0)
+                return m["name"].strip(), dt.datetime.combine(dt.date(year, month, day), time_)
+            except ValueError:
+                return None
+    return None
 
 
 def normalize_chat(text: str) -> str:
     """Pasted chat (Teams): turns \"Name  12:34\" header lines into the speaker-alone-on-a-line format of the transcripts."""
     out = []
     for line in text.replace("\r\n", "\n").splitlines():
-        m = CHAT_HEADER.match(line.strip())
-        out.append((m["a"] or m["b"]).strip() if m else line.rstrip())
+        head = chat_header(line)
+        out.append(head[0] if head else line.rstrip())
     return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip()
+
+
+def chat_start(text: str, now: dt.datetime) -> dt.datetime | None:
+    """Time of the first chat message; a time without date is today (or yesterday if that would be in the future)."""
+    for line in text.splitlines():
+        if head := chat_header(line):
+            stamp = head[1]
+            if isinstance(stamp, dt.datetime):
+                return stamp
+            start = dt.datetime.combine(now.date(), stamp)
+            return start - dt.timedelta(days=1) if start > now else start
+    return None
 
 
 def paste_to_inbox(cfg: dict, text: str, title: str = "") -> str:
@@ -198,8 +230,9 @@ def paste_to_inbox(cfg: dict, text: str, title: str = "") -> str:
     if not body:
         raise ValueError("Nothing to import: the pasted text is empty")
     now = dt.datetime.now().replace(microsecond=0)
-    stem = title.strip() or f"Chat {now:%Y-%m-%d %H-%M}"
-    return write_inbox(cfg, stem, {"Source App": "Clipboard"}, body, detect_speakers(body), now, "Clipboard")
+    start = chat_start(text, now) or now
+    stem = title.strip() or f"Chat {start:%Y-%m-%d %H-%M}"
+    return write_inbox(cfg, stem, {"Source App": "Clipboard"}, body, detect_speakers(body), start, "Clipboard")
 
 
 def write_inbox(cfg: dict, stem: str, meta: dict, body: str, speakers: list[str], recorded: dt.datetime,

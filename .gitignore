@@ -13,3 +13,4 @@ fingerprints.json
 duplicates.json
 /config.yaml
 /categories.yaml
+.pytest_cache/
