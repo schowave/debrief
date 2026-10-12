@@ -613,7 +613,11 @@ def analyze(cfg: dict, meta: dict, body: str, names: dict | None = None, termine
         f"<transcript>\n{body}\n</transcript>"
     )
     result, nutzung = run_claude(cfg, build_system_prompt(cfg), prompt, build_schema(list(cfg["kategorien"])), "Analysis", model)
-    return canonical_names(cfg, result), nutzung
+    result = canonical_names(cfg, result)
+    # The model sometimes names me as responsible but leaves ist_meins false.
+    result["todos"] = [{**t, "ist_meins": bool(t.get("ist_meins")) or is_me(cfg, t.get("verantwortlich"))}
+                       for t in result.get("todos", [])]
+    return result, nutzung
 
 
 def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,

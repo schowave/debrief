@@ -1205,6 +1205,7 @@ function renderTodos(item, d) {
   const box = $("#todos");
   $("#todo-n").textContent = d.todos.length;
   if (!d.todos.length) { box.innerHTML = `<p class="empty-todos">${t("Keine Todos erkannt.")}</p>`; return; }
+  d.todos.forEach(td => { if (!td.ist_meins && isMe(td.verantwortlich)) td.ist_meins = true; });
   box.innerHTML = d.todos.map((td, i) => `<div class="todo ${td.erledigt ? "done" : ""}" data-i="${i}">
       <button class="cbox" role="checkbox" aria-checked="${!!td.erledigt}" aria-label="${t("Erledigt")}" title="${t("Als erledigt ablegen")}">${icon("check")}</button>
       <div class="seg-toggle" role="radiogroup" aria-label="${t("Zuständig")}">
@@ -1243,7 +1244,11 @@ function renderTodos(item, d) {
         ...Object.values(d.sprecher_namen || {}), ...(state.namen || []), ...d.todos.map(x => x.verantwortlich)]
         .filter(n => n && !isMe(n) && !/^Speaker \d+$/.test(n)))];
       const shown = d.sprecher_namen?.[todo.verantwortlich] || todo.verantwortlich || "";
-      comboBox(combo, shown, names, v => { todo.verantwortlich = v; persist(item); });
+      comboBox(combo, shown, names, v => {
+        todo.verantwortlich = v;
+        if (isMe(v)) { todo.ist_meins = true; todo.verantwortlich = state.ich; renderTodos(item, d); }
+        persist(item);
+      });
     }
   });
 }
