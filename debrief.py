@@ -93,6 +93,20 @@ def save_kategorien(cfg: dict, kategorien: dict) -> None:
     tmp.replace(cfg["kategorien_datei"])
     cfg["kategorien"] = kategorien
     cfg["_kategorien_mtime"] = cfg["kategorien_datei"].stat().st_mtime
+    ensure_project_todo_notes(cfg)
+
+
+def ensure_project_todo_notes(cfg: dict) -> None:
+    """One `Todos.md` per project folder as a place for manually added todos (never overwrites)."""
+    for key, cat in cfg["kategorien"].items():
+        for projekt in cat.get("projekte", {}):
+            folder = safe_folder(cfg, f"{cat['ordner']}/{projekt}")
+            note = folder / "Todos.md"
+            if note.exists():
+                continue
+            folder.mkdir(parents=True, exist_ok=True)
+            fm = yaml.safe_dump({"kunde": key, "projekt": projekt, "tags": ["todos"]}, sort_keys=False, allow_unicode=True)
+            note.write_text(f"---\n{fm}---\n\n## Todos\n\n")
 
 
 def safe_folder(cfg: dict, folder: str) -> Path:
