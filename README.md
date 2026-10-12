@@ -52,7 +52,10 @@ MacWhisper ──(Obsidian integration)──▶ Vault/transkripts/
 - **Calendar context:** the matching macOS calendar event (title, organiser, invitees) is passed to the model
 - **Follow-up email draft** (formal/informal, German/English) that you can copy or open in your mail client
 - **Learns from corrections:** your last corrections are sent along as examples
-- **Duplicate detection**, import of older transcripts (folder search or drag & drop), keyboard shortcuts
+- **Todos per project:** your todos go into a `Todos.md` in the project folder (with a link back to the conversation);
+  the Tasks template and the Task Board show all projects at a glance
+- **Duplicate detection**, import of older transcripts (folder search, drag & drop, or pasted text such as a Teams
+  chat), keyboard shortcuts
 - **Event driven**, no polling: FSEvents for the inbox, Server-Sent Events for the page
 - **Private by default:** the page only listens on `127.0.0.1`; configuration and learned data stay local
 
@@ -107,6 +110,7 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 | `mise run calendar-access` | request/check calendar access of the helper |
 | `mise run dry-run` | analyse the inbox, only print |
 | `mise run sort` | direct mode: file without review |
+| `mise run test` | run the tests in `tests/` |
 
 ## Configuration
 
@@ -159,7 +163,8 @@ On the page:
 - **Category / project / person** – pick via chips; "AI" marks the model's suggestion. "＋ New …" creates entries
   on the spot, with the switch you remember them permanently. The target path is shown live
 - **Name speakers** – "Speaker 1" etc. with a sample sentence; the model suggests a name with reasoning
-- **Todos** – "Me"/"Others", assignee, due date, tick to file as already done (`- [x] … ✅ <date>`)
+- **Todos** – "Me"/"Others", assignee, due date, tick to file as already done (`- [x] … ✅ <date>`), flag as
+  urgent (`⏫`, also suggested by the model), assign a todo to another project of the same client
 - **Summary** (click to edit), **decisions**, **tags**, transcript
 - **Follow-up email** – choose formal/informal and the language, create a draft, copy it or open it in the mail client
 - **File to Obsidian** (⌘↵) writes the note and jumps to the next open transcript
@@ -188,7 +193,8 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 |---|---|
 | `server.py` | service: watch the inbox, analysis, review page + API |
 | `debrief.py` | analysis (prompt, schema), render/file notes; also usable as a CLI |
-| `importer.py` | import from folders and drag & drop |
+| `importer.py` | import from folders, drag & drop and the clipboard (Teams chat headers) |
+| `tests/` | tests for todo routing and chat import (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | review page and its English texts |
 | `config.example.yaml`, `categories.example.yaml` | templates for your local `config.yaml` / `categories.yaml` |
 | `calendar/` | source and build script of the calendar helper (`bin/Debrief Calendar.app`, not in git) |

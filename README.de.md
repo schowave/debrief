@@ -84,6 +84,7 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 | `mise run calendar-access` | Kalenderzugriff des Hilfsprogramms anfragen bzw. prüfen |
 | `mise run dry-run` | Inbox analysieren, nur anzeigen |
 | `mise run sort` | Direktmodus: ohne Review einsortieren |
+| `mise run test` | Tests in `tests/` ausführen |
 
 `mise run install` und `mise run uninstall` rufen `install.sh` auf.
 
@@ -160,7 +161,9 @@ Auf der Seite:
 - **Todos:** „Ich“ / „Andere“ umschalten (nur „Ich“ wird eine `- [ ]`-Checkbox fürs Tasks-Plugin),
   Verantwortliche mit Vorschlägen, Fälligkeit über den Kalender mit Schnellwahl. Enter im Aufgabenfeld legt ein
   neues Todo an, Löschen lässt sich rückgängig machen. Das Häkchen links legt ein Todo gleich als erledigt ab (`- [x] … ✅ <Datum>`,
-  erscheint dann nicht in den offenen Listen)
+  erscheint dann nicht in den offenen Listen). Die **Flagge** markiert ein Todo als dringend (`⏫`, das Modell schlägt
+  das bei ausdrücklicher Dringlichkeit selbst vor). Über **„Projekt wie Gespräch“** lässt sich ein Todo einem anderen
+  Projekt desselben Kunden zuordnen
 - **Zusammenfassung** (formatiert, Klick zum Bearbeiten), **Entscheidungen, Tags** anpassen, Transkript aufklappen
 - **Follow-up-Mail:** Du/Sie und Deutsch/English wählen, „Entwurf erstellen“ – das Modell schreibt Betreff und
   Text aus dem aktuellen Stand der Seite (mit deinen Änderungen und Sprechernamen) an die Teilnehmer. Interne Themen
@@ -174,6 +177,14 @@ Auf der Seite:
 - **Sehr kurze Aufnahmen** (unter `min_woerter`) werden nicht analysiert, sondern zum Verwerfen angeboten
 - **Tastenkürzel:** <kbd>J</kbd>/<kbd>K</kbd> nächstes/vorheriges Transkript, <kbd>1</kbd>–<kbd>9</kbd> Kategorie,
   <kbd>⌘↵</kbd> ablegen, <kbd>?</kbd> Übersicht
+
+**Todos pro Projekt:** Jeder Projektordner hat eine `Todos.md` (legt Debrief beim Speichern der Kategorien an).
+Deine Todos landen beim Ablegen dort statt in der Gesprächsnotiz, jeweils mit Link `[[<Gespräch>]]` am Ende; die
+Gesprächsnotiz verweist unter „Meine Todos“ auf die Projektliste. In die `Todos.md` kannst du auch selbst Aufgaben
+schreiben. Todos anderer bleiben in der Gesprächsnotiz. Ohne Projekt (oder im `unklar_ordner`) bleiben auch deine
+Todos in der Notiz; verschiebst du so eine Notiz später in einen Projektordner, sammelt Debrief ihre Todos beim
+nächsten Ablegen bzw. Neustart in die `Todos.md` des Projekts ein. Die Vorlage `templates/Todos.md` fasst alle
+Projekte zusammen, das Task Board zeigt Projekte als Zeilen und die Spalten Offen / In Arbeit / Erledigt.
 
 **Lernen aus Korrekturen:** Weicht deine Zuordnung (Kategorie/Projekt/Person) vom Vorschlag ab, merkt sich der
 Debrief das in `learned.json` und schickt die letzten 15 Korrekturen bei jeder Analyse als Beispiele mit.
@@ -236,6 +247,12 @@ exportiert, kann es noch kollidieren.
   Kopien in die Inbox – die Originale bleiben unverändert. Schon abgelegte oder in der Inbox liegende Transkripte
   sind als „schon importiert“ markiert.
 - **Per Drag & Drop:** einzelne Dateien einfach auf die Seite ziehen (oder im Import-Dialog „Dateien wählen …“).
+- **Aus der Zwischenablage:** ⌘V auf der Seite (außerhalb von Eingabefeldern) oder „Einfügen“ im Import-Dialog legt
+  den kopierten Text als Transkript in die Inbox – gedacht z. B. für Teams-Chats. Lässt sich ein Verlauf nicht am
+  Stück kopieren: „Textfeld …“ öffnet ein Feld, in das du ihn in mehreren Teilen einfügst, optional mit Titel.
+  Chat-Köpfe wie `Max Mustermann 12:34`, `Max Mustermann 12.10.2026 12:34` oder `[12:34] Max Mustermann` werden zu
+  Sprecherzeilen; die Zeit des ersten Beitrags wird zur Aufnahmezeit (ohne Datum: heute, bzw. gestern, wenn die
+  Uhrzeit noch in der Zukunft läge).
 
 Aufnahmezeit: aus dem Frontmatter, sonst aus einem Datum im Dateinamen (`2025-10-03 14-30 …`), sonst das
 Änderungsdatum der Datei. Sprecher werden aus dem MacWhisper-Format erkannt (Name allein auf einer Zeile, darunter
@@ -310,13 +327,22 @@ eine gerade laufende Analyse wird danach neu gestartet.
 Zum Entwickeln `mise run dev`: hält den Dienst an, startet den Server im Terminal
 (Logs und Fehler direkt sichtbar) und startet den Dienst nach Ctrl-C wieder.
 
+## Tests
+
+```sh
+mise run test
+```
+
+Die Tests in `tests/` decken die Todo-Logik (Zuordnung zu Projekten, Format, Einsammeln) und den Chat-Import ab.
+
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
 | `server.py` | Dienst: Inbox überwachen, Analyse, Review-Seite + API |
 | `debrief.py` | Analyse (Prompt, Schema), Notiz rendern/ablegen; auch als CLI nutzbar |
-| `importer.py` | Import aus Ordnern und per Drag & Drop (Suche, Vorschau, Kopie in die Inbox) |
+| `importer.py` | Import aus Ordnern, per Drag & Drop und aus der Zwischenablage (Suche, Vorschau, Teams-Chat-Köpfe, Kopie in die Inbox) |
+| `tests/` | Tests für Todo-Zuordnung und Chat-Import (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | Review-Seite und ihre englischen Texte |
 | `config.yaml`, `categories.yaml` | Einstellungen und Kategorien (lokal, nicht im Git); Vorlagen: `config.example.yaml`, `categories.example.yaml` |
 | `mise.toml` | Werkzeuge (`uv`, `terminal-notifier`, `jq`) und Tasks |
