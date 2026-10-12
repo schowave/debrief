@@ -3,48 +3,27 @@
     {
       "id": 2026101201,
       "index": 1,
-      "colType": "dated",
+      "colType": "taskStatus",
+      "taskStatus": " ",
       "active": true,
       "collapsed": false,
-      "name": "Fällig",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": -300,
-        "to": 7
-      }
+      "name": "Offen"
     },
     {
       "id": 2026101202,
       "index": 2,
-      "colType": "dated",
+      "colType": "taskStatus",
+      "taskStatus": "/",
       "active": true,
       "collapsed": false,
-      "name": "Später",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": 8,
-        "to": 300
-      }
+      "name": "In Arbeit"
     },
     {
       "id": 2026101203,
       "index": 3,
-      "colType": "undated",
-      "active": true,
-      "collapsed": false,
-      "name": "Ohne Termin",
-      "datedBasedColumn": {
-        "dateType": "due",
-        "from": 0,
-        "to": 0
-      }
-    },
-    {
-      "id": 2026101204,
-      "index": 4,
       "colType": "completed",
       "active": true,
-      "collapsed": true,
+      "collapsed": false,
       "limit": 30,
       "name": "Erledigt"
     }
