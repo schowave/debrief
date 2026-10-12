@@ -293,6 +293,7 @@
           padding: 10px 0; border-bottom: 1px solid var(--line); }
   .todo:last-of-type { border-bottom: 0; }
   .todo.done .task { text-decoration: line-through; color: var(--muted); }
+  .proj-sel { min-height: 36px; padding: 0 8px; max-width: 14em; }
   .when { display: inline-flex; align-items: center; gap: 6px; }
   .urgent-btn { width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--muted); cursor: pointer; }
   .urgent-btn:hover { background: var(--surface-2); color: var(--text); }
@@ -1212,6 +1213,7 @@ function renderTodos(item, d) {
   $("#todo-n").textContent = d.todos.length;
   if (!d.todos.length) { box.innerHTML = `<p class="empty-todos">${t("Keine Todos erkannt.")}</p>`; return; }
   d.todos.forEach(td => { if (!td.ist_meins && isMe(td.verantwortlich)) td.ist_meins = true; });
+  const otherProjects = Object.keys(catOf(d)?.projekte || {}).filter(p => p !== (d.projekt || "").trim());
   box.innerHTML = d.todos.map((td, i) => `<div class="todo ${td.erledigt ? "done" : ""}" data-i="${i}">
       <button class="cbox" role="checkbox" aria-checked="${!!td.erledigt}" aria-label="${t("Erledigt")}" title="${t("Als erledigt ablegen")}">${icon("check")}</button>
       <div class="seg-toggle" role="radiogroup" aria-label="${t("Zuständig")}">
@@ -1221,7 +1223,10 @@ function renderTodos(item, d) {
       <div class="when">
         <button class="urgent-btn" role="switch" aria-checked="${!!td.dringend}" aria-label="${t("Dringend")}" title="${t("Als dringend markieren")}">${icon("flag")}</button>
         <button class="date-btn ${td.faellig ? (td.faellig < todayIso() ? "overdue" : "") : "empty"}" aria-haspopup="dialog">
-          ${icon("cal")}<span>${esc(fmtDate(td.faellig))}</span></button></div>
+          ${icon("cal")}<span>${esc(fmtDate(td.faellig))}</span></button>
+        ${otherProjects.length ? `<select class="input proj-sel" aria-label="${t("Projekt")}" title="${t("Projekt für dieses Todo")}">
+          <option value="">${t("Projekt wie Gespräch")}</option>
+          ${otherProjects.map(p => `<option ${td.projekt === p ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>` : ""}</div>
       <button class="icon-btn danger" aria-label="${t("Todo entfernen")}">${icon("trash")}</button>
       ${td.ist_meins ? "" : `<div class="who-row"><span>${t("Verantwortlich")}</span><div class="combo"></div></div>`}
     </div>`).join("");
@@ -1239,6 +1244,8 @@ function renderTodos(item, d) {
       persist(item); renderTodos(item, d);
       $$("#todos .todo")[i]?.querySelector(todo.ist_meins ? ".task" : ".combo input")?.focus();
     });
+    const projSel = $(".proj-sel", row);
+    if (projSel) projSel.onchange = e => { todo.projekt = e.target.value || null; persist(item); };
     $(".urgent-btn", row).onclick = e => {
       todo.dringend = !todo.dringend; persist(item);
       e.currentTarget.setAttribute("aria-checked", todo.dringend);

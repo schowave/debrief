@@ -156,6 +156,8 @@ const EN = {
   "Aufgabe": "Task",
   "Todo entfernen": "Remove todo",
   "Dringend": "Urgent",
+  "Projekt für dieses Todo": "Project for this todo",
+  "Projekt wie Gespräch": "Project of the conversation",
   "Als dringend markieren": "Mark as urgent",
   "Todo entfernt": "Todo removed",
   "Verantwortlich": "Assignee",

@@ -493,7 +493,7 @@ def clean_result(r: dict) -> dict:
     todos = [
         {"aufgabe": t["aufgabe"].strip(), "verantwortlich": (t.get("verantwortlich") or "").strip() or None,
          "faellig": t.get("faellig") or None, "ist_meins": bool(t.get("ist_meins")),
-         "dringend": bool(t.get("dringend")),
+         "dringend": bool(t.get("dringend")), "projekt": (t.get("projekt") or "").strip() or None,
          "erledigt": bool(t.get("erledigt"))}
         for t in r.get("todos", []) if t.get("aufgabe", "").strip()
     ]
