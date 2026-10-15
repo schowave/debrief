@@ -82,9 +82,13 @@
   .recent { margin-top: 12px; padding: 12px 6px 4px; border-top: 1px solid var(--line); }
   .recent h3 { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
                margin: 0 8px 6px; }
-  .recent a { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 8px; color: inherit;
+  .recent .row { position: relative; }
+  .recent a { display: flex; flex-direction: column; gap: 2px; padding: 8px 36px 8px 8px; border-radius: 8px; color: inherit;
               text-decoration: none; font-size: 13.5px; }
   .recent a:hover { background: var(--surface-2); }
+  .recent .icon-btn { position: absolute; top: 4px; right: 2px; width: 30px; height: 30px; opacity: 0; }
+  .recent .row:hover .icon-btn, .recent .icon-btn:focus-visible { opacity: 1; }
+  @media (hover: none) { .recent .icon-btn { opacity: 1; } }
   .recent a .p { color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 5px; }
   .recent a .p .i { width: 13px; height: 13px; }
   .spk { display: grid; grid-template-columns: 110px minmax(0, 1fr) 240px; gap: 6px 14px; align-items: center;
@@ -831,11 +835,13 @@ function renderList() {
   $("#count").textContent = open ? t("{n} offen", { n: open }) : "";
   const list = $("#list");
   const recent = (state.abgelegt || []).slice(0, 8);
-  const recentHtml = recent.length ? `<div class="recent"><h3>${t("Zuletzt abgelegt")}</h3>${recent.map(a => `
+  const recentHtml = recent.length ? `<div class="recent"><h3>${t("Zuletzt abgelegt")}</h3>${recent.map((a, i) => `<div class="row">
     <a href="${esc(a.url)}" title="${t("In Obsidian öffnen")}">${esc(a.titel)}
-      <span class="p">${icon("ext")}${esc(a.ziel.split("/").slice(0, -1).join("/") || "/")}</span></a>`).join("")}</div>` : "";
+      <span class="p">${icon("ext")}${esc(a.ziel.split("/").slice(0, -1).join("/") || "/")}</span></a>
+    <button class="icon-btn danger" data-i="${i}" aria-label="${t("Eintrag entfernen")}" title="${t("Aus dem Verlauf entfernen")}">${icon("x")}</button></div>`).join("")}</div>` : "";
   if (!state.items.length) {
     list.innerHTML = `<p class="list-empty">${t("Keine offenen Transkripte. Neue Aufnahmen erscheinen hier automatisch.")}</p>` + recentHtml;
+    bindRecent(list);
     return;
   }
   list.innerHTML = state.items.map(i => {
@@ -848,6 +854,13 @@ function renderList() {
     </button>`;
   }).join("") + recentHtml;
   $$(".item", list).forEach(b => b.onclick = () => select(b.dataset.id));
+  bindRecent(list);
+}
+function bindRecent(list) {
+  $$(".recent button", list).forEach(b => b.onclick = async () => {
+    try { setState(await api("/api/abgelegt/loeschen", { index: +b.dataset.i })); }
+    catch (e) { toast(e.message, true); }
+  });
 }
 
 // ---------- Draft ----------
@@ -1464,7 +1477,7 @@ function toastUndo(msg, undo) {
   box.innerHTML = `<span>${esc(msg)}</span><button class="toast-btn">${t("Rückgängig")}</button>`;
   box.classList.remove("err"); box.classList.add("show");
   $("button", box).onclick = () => { undo(); box.classList.remove("show"); };
-  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 5000);
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => box.classList.remove("show"), 5000);
 }
 
 let closePopover = null;
