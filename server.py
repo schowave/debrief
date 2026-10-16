@@ -178,6 +178,8 @@ class Store:
         now = time.time()
         present = set()
         for src in list(self.inbox.glob("*.md")):
+            if not src.exists():  # older duplicate, already replaced by a newer copy in this pass
+                continue
             if now - src.stat().st_mtime >= RENAME_AFTER_S:
                 src = self.make_unique(src)
             item_id = self.item_id(src)
@@ -191,7 +193,14 @@ class Store:
             fp = fingerprint(body, speakers, meta)
             dup_sim, dup = self.duplicate_of(fp, item_id)
             limits = self.cfg.get("duplikate", {})
-            if dup and dup_sim >= limits.get("automatisch_ab", 0.9):
+            auto = limits.get("automatisch_ab", 0.9)
+            # Newest wins against older copies in the inbox; filed notes in the vault stay untouched
+            while dup and dup_sim >= auto and (old := self.older_in_inbox(dup, src)):
+                self.discard_duplicate(old, dup_sim, {"titel": src.stem})
+                self.delete(dup["id"])
+                present.discard(dup["id"])
+                dup_sim, dup = self.duplicate_of(fp, item_id)
+            if dup and dup_sim >= auto:
                 self.discard_duplicate(src, dup_sim, dup)
                 present.discard(item_id)
                 continue
@@ -240,8 +249,19 @@ class Store:
                     continue
                 i["fp"] = fingerprint(body, [str(x) for x in meta.get("Speakers") or []], meta)
                 self.put(i)
-            pending.append({**i["fp"], "titel": (i.get("ergebnis") or {}).get("titel") or i["datei"], "datei": i["datei"]})
+            pending.append({**i["fp"], "titel": (i.get("ergebnis") or {}).get("titel") or i["datei"],
+                            "datei": i["datei"], "id": i["id"]})
         return find_duplicate(fp, data["notizen"] + pending)
+
+    def older_in_inbox(self, dup: dict, src: Path) -> Path | None:
+        """Source of the duplicate if it is a transcript in the inbox that arrived no later than `src`."""
+        if "id" not in dup:
+            return None
+        old = self.inbox / dup["datei"]
+        try:
+            return old if old.stat().st_mtime <= src.stat().st_mtime else None
+        except FileNotFoundError:
+            return None
 
     def discard_duplicate(self, src: Path, sim: float, dup: dict) -> None:
         trashed = move_to_trash(src)

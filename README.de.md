@@ -266,7 +266,7 @@ schon vorhandenen Notizen im Vault werden beim Start einmalig erfasst (`fingerpr
 
 | Ähnlichkeit | Verhalten |
 |---|---|
-| ab `duplikate.automatisch_ab` (0,9) oder gleiche Aufnahmezeit + Dauer | automatisch in den Papierkorb, Mitteilung „Duplikat verworfen“; unter „Einstellungen → Duplikate“ wiederherstellbar |
+| ab `duplikate.automatisch_ab` (0,9) oder gleiche Aufnahmezeit + Dauer | automatisch in den Papierkorb, Mitteilung „Duplikat verworfen“; unter „Einstellungen → Duplikate“ wiederherstellbar. Liegen beide in der Inbox, gewinnt das neuere und das ältere wird verworfen; eine schon abgelegte Notiz bleibt dagegen immer stehen |
 | ab `duplikate.pruefen_ab` (0,5) | wird nicht analysiert, sondern als „Duplikat?“ angezeigt: Verwerfen oder „Kein Duplikat – analysieren“ |
 | darunter | normale Analyse |
 
