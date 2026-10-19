@@ -122,7 +122,7 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 |---|---|
 | `vault` | path to the Obsidian vault |
 | `inbox` | folder in the vault MacWhisper writes to |
-| `ich` | your speaker name in the transcripts (for "my todos") |
+| `ich` | your full speaker name in the transcripts (for "my todos"; a first name alone also matches namesakes) |
 | `rolle` | optional, your role (e.g. "consultant at Acme") – helps the model |
 | `model` | model for `claude -p`, e.g. `sonnet` or a gateway model |
 | `sprache` | `de` or `en`: language of notifications (the page remembers its own choice) |

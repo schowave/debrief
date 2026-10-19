@@ -4,8 +4,9 @@ vault: ~/Documents/Obsidian Vault
 # Folder where MacWhisper puts the transcripts (relative to the vault)
 inbox: transkripts
 
-# Your name, as it appears as a speaker in the transcript
-ich: Max
+# Your full name, as it appears as a speaker in the transcript (a first name alone also matches every
+# colleague with that first name)
+ich: Max Mustermann
 
 # Optional: your role, helps the model classify (e.g. "consultant at Acme")
 #rolle: Beraterin bei Acme

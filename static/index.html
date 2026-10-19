@@ -1303,9 +1303,15 @@ function renderTodos(item, d) {
   });
 }
 
-// “David” in the config, “David Schowalter” in the transcript → both are me
-const isMe = name => { const n = (name || "").trim().toLowerCase(), me = (state.ich || "").trim().toLowerCase();
-  return !!me && (n === me || n.startsWith(me + " ")); };
+// “David Schowalter” in the config: “David Schowalter”, “Schowalter, David” and plain “David” are me, “David Halder”
+// is not. With only a first name in the config, every “David …” counts as me (same as is_me in debrief.py).
+const isMe = name => {
+  const n = (name || "").trim().toLowerCase(), me = (state.ich || "").trim().toLowerCase();
+  if (!me) return false;
+  const [first, ...rest] = me.split(/\s+/);
+  if (!rest.length) return n === me || n.startsWith(me + " ");
+  return [me, first, `${rest.join(" ")}, ${first}`].includes(n);
+};
 
 function renderSpeakers(item, d) {
   const speakers = (item.sprecher || []).filter(x => !isMe(x));

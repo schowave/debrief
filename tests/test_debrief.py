@@ -39,6 +39,13 @@ def test_is_me(cfg, name, expected):
     assert d.is_me(cfg, name) is expected
 
 
+@pytest.mark.parametrize("name, expected", [
+    ("David Schowalter", True), ("Schowalter, David", True), ("david", True),
+    ("David Halder", False), ("Halder, David", False), ("Schowalter", False)])
+def test_is_me_with_full_name(cfg, name, expected):
+    assert d.is_me({**cfg, "ich": "David Schowalter"}, name) is expected
+
+
 def test_format_todo_mine_with_due_date_and_urgent():
     assert d.format_todo(todo("Mail schreiben", faellig="2026-10-20", dringend=True), "David") \
         == "- [ ] Mail schreiben 📅 2026-10-20 ⏫"

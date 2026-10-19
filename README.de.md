@@ -115,7 +115,7 @@ Sprecher in MacWhisper benennen lohnt sich: dann stimmen die Verantwortlichen be
 |---|---|
 | `vault` | Pfad zum Obsidian-Vault |
 | `inbox` | Ordner im Vault, in den MacWhisper schreibt |
-| `ich` | dein Sprechername im Transkript (für „Meine Todos“) |
+| `ich` | dein voller Sprechername im Transkript (für „Meine Todos“; nur der Vorname trifft auch Namensvettern) |
 | `model` | Modell für `claude -p`, z. B. `sonnet` oder ein Gateway-Modell |
 | `rolle` | optional: deine Rolle (z. B. „Beraterin bei Acme“), hilft dem Modell |
 | `sprache` | `de` oder `en`: Sprache der Mitteilungen (die Seite merkt sich ihre Sprache selbst, Umschalter oben rechts) |

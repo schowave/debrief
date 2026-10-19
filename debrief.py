@@ -143,9 +143,15 @@ def save_gelernt(data: dict) -> None:
 
 
 def is_me(cfg: dict, name: str) -> bool:
-    """\"David\" in the config, \"David Schowalter\" in the transcript → both are me."""
+    """\"David Schowalter\" in the config: \"David Schowalter\", \"Schowalter, David\" and plain \"David\" are me,
+    \"David Halder\" is not. With only a first name in the config, every \"David …\" counts as me."""
     n, me = str(name or "").strip().casefold(), str(cfg.get("ich", "")).strip().casefold()
-    return bool(me) and (n == me or n.startswith(me + " "))
+    if not me:
+        return False
+    first, *rest = me.split()
+    if not rest:
+        return n == me or n.startswith(me + " ")
+    return n in (me, first, f"{' '.join(rest)}, {first}")
 
 
 def is_placeholder_speaker(name: str) -> bool:
