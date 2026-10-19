@@ -688,10 +688,10 @@ async function api(path, body) {
   return data;
 }
 function toast(msg, err = false) {
-  const t = $("#toast");
-  t.innerHTML = icon(err ? "alert" : "check") + `<span>${esc(msg)}</span>`;
-  t.classList.toggle("err", err); t.classList.add("show");
-  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), err ? 6000 : 3500);
+  const box = $("#toast");
+  box.innerHTML = icon(err ? "alert" : "check") + `<span>${esc(msg)}</span>`;
+  box.classList.toggle("err", err); box.classList.add("show");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => box.classList.remove("show"), err ? 6000 : 3500);
 }
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -716,9 +716,9 @@ function fmtUsd(v) {
 }
 function fmtTokens(n) { return n >= 1000 ? nf(n / 1000, n < 10000 ? 1 : 0) + "k" : nf(n); }
 let models = [];
-async function loadModels(refresh = false) {
-  if (models.length && !refresh) return models;
-  try { models = (await api("/api/modelle" + (refresh ? "?neu=1" : ""))).modelle; } catch (e) { toast(e.message, true); }
+async function loadModels(neu = false) {
+  if (models.length && !neu) return models;
+  try { models = (await api("/api/modelle" + (neu ? "?neu=1" : ""))).modelle; } catch (e) { toast(e.message, true); }
   return models;
 }
 const perMtok = v => v ? nf(v * 1e6, v * 1e6 < 1 ? 2 : 1) + " $" : "0 $";
@@ -727,7 +727,7 @@ function modelMeta(m) {
   return (m.input || m.output ? t("Ein {i} · Aus {o} je 1 Mio. Tokens · ca. {c} pro Analyse", { i: perMtok(m.input), o: perMtok(m.output), c: fmtUsd(est) })
                               : t("kostenlos")) + (m.kontext ? " · " + t("{n} Kontext", { n: fmtTokens(m.kontext) }) : "");
 }
-function renderModelList(box, { selected, onPick }) {
+function renderModelList(box, { selected: chosen, onPick }) {
   if (!models.length) { box.innerHTML = `<p class="empty-hint">${t("Keine Modellliste – ohne Gateway wird <code>model</code> aus <code>config.yaml</code> genutzt.")}</p>`; return; }
   box.innerHTML = `<input class="input search" placeholder="${t("Modell suchen …")}" aria-label="${t("Modell suchen")}"><div class="groups"></div>`;
   const groups = $(".groups", box), search = $(".search", box);
@@ -736,7 +736,7 @@ function renderModelList(box, { selected, onPick }) {
     const shown = models.filter(m => !q || (m.id + " " + m.anbieter).toLowerCase().includes(q));
     const byProvider = shown.reduce((acc, m) => ((acc[m.anbieter] ||= []).push(m), acc), {});
     groups.innerHTML = Object.entries(byProvider).map(([anbieter, list]) => `<h4>${esc(anbieter)}</h4>` + list.map(m => `
-      <button class="model" role="radio" aria-checked="${m.id === selected}" data-id="${esc(m.id)}">
+      <button class="model" role="radio" aria-checked="${m.id === chosen}" data-id="${esc(m.id)}">
         <span class="name">${esc(m.id)}</span>
         <span class="tag ${m.intern ? "intern" : "extern"}">${t(m.intern ? "intern" : "extern")}</span>
         <span class="meta">${esc(modelMeta(m))}</span>
@@ -772,7 +772,7 @@ function costLabel(item) {
 }
 // Minimal Markdown for the summary: paragraphs, bullet points, **bold**, *italic*
 function md(text) {
-  const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
   const out = []; let list = null, para = [];
   const flushPara = () => { if (para.length) out.push(`<p>${inline(para.join(" "))}</p>`); para = []; };
   const flushList = () => { if (list) out.push(`<ul>${list.map(li => `<li>${inline(li)}</li>`).join("")}</ul>`); list = null; };
@@ -1197,9 +1197,9 @@ function chips(box, options, value, onSelect, { add, active = false, onAdd } = {
   });
 }
 function autoGrow(root = document) {
-  $$("textarea.grow", root).forEach(t => {
-    const fit = () => { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; };
-    if (!t.dataset.grow) { t.dataset.grow = 1; t.addEventListener("input", fit); }
+  $$("textarea.grow", root).forEach(ta => {
+    const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; };
+    if (!ta.dataset.grow) { ta.dataset.grow = 1; ta.addEventListener("input", fit); }
     fit();
   });
 }
@@ -1372,14 +1372,14 @@ function renderTermin(item) {
   const sel = item.termin_index == null ? "" : String(item.termin_index);
   const box = $("#c-termin");
   const byModel = !item.termin_manuell && item.termin_index != null;
-  chips(box, [...termine.map((t, i) => ({ value: String(i), label: t.titel, sugg: byModel && i === item.termin_index })),
+  chips(box, [...termine.map((x, i) => ({ value: String(i), label: x.titel, sugg: byModel && i === item.termin_index })),
     { value: "", label: t("Kein Termin") }], sel, async v => {
     try {
       const s = await api(`/api/items/${item.id}/termin`, { index: v === "" ? null : +v });
       state = s; Object.assign(item, s.items.find(i => i.id === item.id)); renderList(); renderTermin(item);
     } catch (e) { toast(e.message, true); }
   });
-  $$(".chip", box).forEach((c, i) => { const t = termine[i]; if (t) c.insertAdjacentHTML("beforeend", ` <span class="t-time">${esc(t.start.slice(11, 16))}–${esc(t.ende.slice(11, 16))}</span>`); });
+  $$(".chip", box).forEach((c, i) => { const x = termine[i]; if (x) c.insertAdjacentHTML("beforeend", ` <span class="t-time">${esc(x.start.slice(11, 16))}–${esc(x.ende.slice(11, 16))}</span>`); });
   const tm = terminOf(item), people = terminPeople(item);
   const changed = item.termin_index !== item.termin_analysiert && item.status === "bereit";
   $("#termin-info").innerHTML = (tm ? [
@@ -1466,10 +1466,10 @@ async function discard(item) {
 }
 
 function toastLink(msg, label, href) {
-  const t = $("#toast");
-  t.innerHTML = icon("check") + `<span>${esc(msg)}</span><a href="${esc(href)}">${esc(label)} →</a>`;
-  t.classList.remove("err"); t.classList.add("show");
-  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 7000);
+  const box = $("#toast");
+  box.innerHTML = icon("check") + `<span>${esc(msg)}</span><a href="${esc(href)}">${esc(label)} →</a>`;
+  box.classList.remove("err"); box.classList.add("show");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => box.classList.remove("show"), 7000);
 }
 
 function toastUndo(msg, undo) {
@@ -1573,7 +1573,7 @@ async function save(item, d) {
     if (!catOf(d)) $("#c-kat .chip")?.focus();
     return;
   }
-  const leer = d.todos.findIndex(t => !t.aufgabe.trim());
+  const leer = d.todos.findIndex(x => !x.aufgabe.trim());
   if (leer >= 0) { d.todos.splice(leer, 1); }
   busy(btn, true);
   try {
@@ -1652,8 +1652,8 @@ async function impSearch() {
 
 function impHighlight(text, q) {
   let html = esc(text);
-  for (const t of q.toLowerCase().split(/\s+/).filter(Boolean)) {
-    html = html.replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), m => `<mark>${m}</mark>`);
+  for (const w of q.toLowerCase().split(/\s+/).filter(Boolean)) {
+    html = html.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), m => `<mark>${m}</mark>`);
   }
   return html;
 }
@@ -1814,16 +1814,16 @@ const yamlBase = {};  // loaded state, to detect unsaved changes
 const dirty = () => ["cats-yaml", "config-yaml"].some(id => yamlBase[id] !== undefined && $("#" + id).value !== yamlBase[id]);
 
 function showTab(name) {
-  $$("#settings [role=tab]").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === name));
+  $$("#settings [role=tab]").forEach(tab => tab.setAttribute("aria-selected", tab.dataset.tab === name));
   $$("#settings [role=tabpanel]").forEach(p => p.hidden = p.dataset.panel !== name);
   store.set("settings-tab", name);
 }
-$$("#settings [role=tab]").forEach(t => {
-  t.onclick = () => showTab(t.dataset.tab);
-  t.onkeydown = e => {
+$$("#settings [role=tab]").forEach(tab => {
+  tab.onclick = () => showTab(tab.dataset.tab);
+  tab.onkeydown = e => {
     const tabs = $$("#settings [role=tab]"), step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     if (!step) return;
-    const next = tabs[(tabs.indexOf(t) + step + tabs.length) % tabs.length];
+    const next = tabs[(tabs.indexOf(tab) + step + tabs.length) % tabs.length];
     next.focus(); showTab(next.dataset.tab);
   };
 });

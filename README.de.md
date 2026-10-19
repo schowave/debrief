@@ -76,7 +76,7 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 |---|---|
 | `mise run install` | Werkzeuge installieren, Dienst einrichten bzw. neu laden |
 | `mise run uninstall` | Dienst entfernen (Dateien und Vorschläge bleiben) |
-| `mise run restart` | Dienst neu starten (nach Code- oder `config.yaml`-Änderungen) |
+| `mise run restart` | Dienst neu starten und warten, bis die Seite antwortet (nach Code- oder `config.yaml`-Änderungen) |
 | `mise run status` | Läuft der Dienst? Welche Vorschläge sind offen? |
 | `mise run open` | Review-Seite öffnen |
 | `mise run logs` | Logs live verfolgen |
@@ -85,6 +85,8 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 | `mise run dry-run` | Inbox analysieren, nur anzeigen |
 | `mise run sort` | Direktmodus: ohne Review einsortieren |
 | `mise run test` | Tests in `tests/` ausführen |
+| `mise run lint` | Review-Seite mit ESLint prüfen |
+| `mise run check` | Lint und Tests (läuft nach `mise run hooks` vor jedem Commit) |
 
 `mise run install` und `mise run uninstall` rufen `install.sh` auf.
 
@@ -330,10 +332,13 @@ Zum Entwickeln `mise run dev`: hält den Dienst an, startet den Server im Termin
 ## Tests
 
 ```sh
-mise run test
+mise run check   # ESLint für static/ und die Tests
+mise run hooks   # einmalig: check läuft dann vor jedem Commit
 ```
 
-Die Tests in `tests/` decken die Todo-Logik (Zuordnung zu Projekten, Format, Einsammeln) und den Chat-Import ab.
+Die Tests in `tests/` decken die Todo-Logik (Zuordnung zu Projekten, Format, Einsammeln), den Chat-Import und die
+Duplikat-Erkennung beim Einlesen der Inbox ab. ESLint (`eslint.config.mjs`) meldet überdeckte und undefinierte Namen
+im Script der Review-Seite.
 
 ## Dateien
 
@@ -342,7 +347,7 @@ Die Tests in `tests/` decken die Todo-Logik (Zuordnung zu Projekten, Format, Ein
 | `server.py` | Dienst: Inbox überwachen, Analyse, Review-Seite + API |
 | `debrief.py` | Analyse (Prompt, Schema), Notiz rendern/ablegen; auch als CLI nutzbar |
 | `importer.py` | Import aus Ordnern, per Drag & Drop und aus der Zwischenablage (Suche, Vorschau, Teams-Chat-Köpfe, Kopie in die Inbox) |
-| `tests/` | Tests für Todo-Zuordnung und Chat-Import (`mise run test`) |
+| `tests/` | Tests für Todo-Zuordnung, Chat-Import und Duplikate (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | Review-Seite und ihre englischen Texte |
 | `config.yaml`, `categories.yaml` | Einstellungen und Kategorien (lokal, nicht im Git); Vorlagen: `config.example.yaml`, `categories.example.yaml` |
 | `mise.toml` | Werkzeuge (`uv`, `terminal-notifier`, `jq`) und Tasks |

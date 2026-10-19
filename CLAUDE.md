@@ -1,0 +1,2 @@
+- The review page is a single file, `static/index.html` (inline script); its English texts live in `static/i18n.js` – every new UI string gets an entry there.
+- `mise run check` = lint + tests (also the pre-commit hook). After changing `server.py` or `debrief.py`, `mise run restart` reloads the running service.

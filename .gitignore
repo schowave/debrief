@@ -14,3 +14,4 @@ duplicates.json
 /config.yaml
 /categories.yaml
 .pytest_cache/
+node_modules/

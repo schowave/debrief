@@ -1,0 +1,3 @@
+#!/bin/sh
+# Lint and tests before every commit; enable once with `mise run hooks`
+exec mise run check

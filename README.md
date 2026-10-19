@@ -102,7 +102,7 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 |---|---|
 | `mise run install` | install tools, set up or reload the service |
 | `mise run uninstall` | remove the service (files and suggestions stay) |
-| `mise run restart` | restart the service (after code or `config.yaml` changes) |
+| `mise run restart` | restart the service and wait until the page answers (after code or `config.yaml` changes) |
 | `mise run status` | is the service running? which suggestions are open? |
 | `mise run open` | open the review page |
 | `mise run logs` | follow the logs |
@@ -111,6 +111,8 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 | `mise run dry-run` | analyse the inbox, only print |
 | `mise run sort` | direct mode: file without review |
 | `mise run test` | run the tests in `tests/` |
+| `mise run lint` | lint the review page with ESLint |
+| `mise run check` | lint and tests (runs before every commit after `mise run hooks`) |
 
 ## Configuration
 
@@ -194,7 +196,7 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 | `server.py` | service: watch the inbox, analysis, review page + API |
 | `debrief.py` | analysis (prompt, schema), render/file notes; also usable as a CLI |
 | `importer.py` | import from folders, drag & drop and the clipboard (Teams chat headers) |
-| `tests/` | tests for todo routing and chat import (`mise run test`) |
+| `tests/` | tests for todo routing, chat import and duplicates (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | review page and its English texts |
 | `config.example.yaml`, `categories.example.yaml` | templates for your local `config.yaml` / `categories.yaml` |
 | `calendar/` | source and build script of the calendar helper (`bin/Debrief Calendar.app`, not in git) |

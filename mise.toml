@@ -4,6 +4,7 @@ uv = "latest"
 # Universal binary (arm64 + x86_64) straight from the GitHub release
 "github:julienXX/terminal-notifier" = "3.1.0"
 jq = "latest"  # for `mise run status`
+node = "lts"  # for `mise run lint`
 
 [env]
 DEBRIEF_LABEL = "de.{{ exec(command='id -un') }}.debrief"
@@ -19,11 +20,19 @@ description = "Remove the launchd service (files and suggestions are kept)"
 run = "./install.sh uninstall"
 
 [tasks.restart]
-description = "Restart the service, e.g. after changes to server.py, debrief.py or config.yaml"
+description = "Restart the service and wait until the review page answers, e.g. after changes to server.py, debrief.py or config.yaml"
 shell = "bash -c"
 run = '''
-launchctl kickstart -k "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null && echo "neu gestartet" \
+launchctl kickstart -k "gui/$(id -u)/$DEBRIEF_LABEL" 2>/dev/null \
   || { echo "Dienst nicht installiert – erst: mise run install" >&2; exit 1; }
+port=$(sed -n 's/^ *port: *\([0-9]*\).*/\1/p' config.yaml | head -1)
+for _ in $(seq 30); do
+  curl -sf -o /dev/null "http://127.0.0.1:${port:-8765}/api/state" && { echo "neu gestartet"; exit 0; }
+  sleep 0.5
+done
+echo "Neu gestartet, aber nach 15 s noch nicht erreichbar – letzte Log-Zeilen:" >&2
+tail -n 20 debrief.log launchd.log >&2
+exit 1
 '''
 
 [tasks.status]
@@ -51,6 +60,19 @@ open "http://${host:-127.0.0.1}:${port:-8765}/"
 [tasks.test]
 description = "Run the tests"
 run = "uv run --no-project --with pytest --with pyyaml python -m pytest -q tests"
+
+[tasks.lint]
+description = "Lint the review page (static/)"
+shell = "bash -c"
+run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static"
+
+[tasks.check]
+description = "Lint and tests – runs before every commit once `mise run hooks` is set up"
+depends = ["lint", "test"]
+
+[tasks.hooks]
+description = "Enable the pre-commit hook (.githooks/pre-commit)"
+run = "git config core.hooksPath .githooks"
 
 [tasks.logs]
 description = "Follow the logs live"
