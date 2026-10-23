@@ -63,3 +63,11 @@ def test_filed_note_stays_and_new_copy_is_discarded(store):
     store.scan()
     assert store.all() == []
     assert [p.name for p in s.TRASH.iterdir()] == ["a.md"]
+
+
+def test_sorted_by_recording_date_newest_first(store):
+    for item_id, recorded, created in [("a" * 12, "2026-10-01 09:00:00", "2026-10-23T10:00:00"),
+                                       ("b" * 12, "2026-10-22 17:18:27", "2026-10-19T10:00:00"),
+                                       ("c" * 12, "", "2026-10-05T08:00:00")]:
+        store.put({"id": item_id, "datei": f"{item_id}.md", "aufgenommen": recorded, "erstellt": created})
+    assert [i["id"][0] for i in store.all()] == ["b", "c", "a"]

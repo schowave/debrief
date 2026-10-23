@@ -128,7 +128,8 @@ class Store:
                 items.append(json.loads(p.read_text()))
             except (json.JSONDecodeError, FileNotFoundError):
                 continue  # just deleted/replaced
-        return sorted(items, key=lambda i: i["erstellt"], reverse=True)
+        # newest recording first; "Recorded At" comes as "2026-10-22 17:18:27", "erstellt" as ISO with "T"
+        return sorted(items, key=lambda i: (i.get("aufgenommen") or i["erstellt"]).replace("T", " ")[:19], reverse=True)
 
     def source(self, item: dict) -> Path:
         return self.inbox / item["datei"]
