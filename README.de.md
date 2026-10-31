@@ -299,6 +299,52 @@ einmalig nach dem Kalenderzugriff. Es läuft nur kurz pro Transkript, nicht daue
 erneut anfragen: `mise run calendar-access`; verwalten unter Systemeinstellungen → Datenschutz & Sicherheit →
 Kalender. Wird die App neu gebaut, fragt macOS erneut (die Erlaubnis gilt pro Build).
 
+### Live-Assistent
+
+`http://debrief.localhost:8765/live` – am besten in einem eigenen Fenster neben dem Call (taucht so beim Teilen eines
+Browser-Tabs nicht auf). Startet MacWhisper die Aufnahme eines Meetings, kommt die Mitteilung „Live-Assistent
+öffnen?“, und die Seite hängt sich an die laufende Aufnahme. Beendete Aufnahmen lassen sich komplett auswerten oder als
+Replay abspielen (beschleunigt, als liefe das Meeting gerade).
+
+- **Transkript** (links): liest MacWhispers Datenbank schreibgeschützt; Zeilen, die MacWhisper noch umschreibt, sind
+  grau und gehen nicht an den Assistenten. Klick auf einen Sprecher benennt ihn (Vorschläge aus den Kalender-Eingeladenen);
+  die Namen landen später im Debrief-Eintrag.
+- **Assistent** (Mitte): etwa alle 75 s – nur wenn neue bestätigte Zeilen da sind – oder sofort mit *Jetzt* schlägt das
+  Modell **Fragen** (die drei wichtigsten unter „Jetzt fragen“), **Annahmen**, **offene Punkte** und **Code-Bezüge**
+  vor. Anpinnen, als gestellt/beantwortet markieren, verwerfen – Verworfenes kommt nicht wieder. Annahmen bewertest du:
+  *stimmt* bzw. *stimmt nicht* (mit Korrektur) werden zu Fakten für jeden weiteren Lauf, *unklar* wird zur Frage.
+  Das Feld oben nimmt Anweisungen („Fokus auf Fehlerfälle“, bleibt als Chip, bis du sie entfernst; „nur für den nächsten
+  Lauf“ ankreuzbar) und Korrekturen („Der Prozess startet erst bei der Freigabe“) – Korrekturen erkennt der Assistent
+  und macht Fakten daraus.
+- **Prozess** (rechts): Event-Storming-Board auf Process Level – Akteur → Command → Domain Event → Policy, Read Models,
+  externe Systeme, Aggregate und Hotspots, eine Lane je Akteur bzw. Bounded Context. Offene Fragen erscheinen als rote,
+  nummerierte Hotspots am betroffenen Element (Klick springt zur Frage und umgekehrt). Direkt bearbeiten: Klick öffnet
+  den Editor, Ziehen verschiebt (auch in eine andere Lane), Verbindungen setzen. Was du anfasst oder bestätigst, ist
+  **gesperrt** – der Assistent macht dazu nur **Vorschläge** (übernehmen/ablehnen); Gelöschtes fügt er nicht wieder ein.
+  Mehrere Prozesse pro Meeting als Tabs.
+- **Kontext** (oben): Termin, Kategorie/Projekt (aus dem Termin vorgeschlagen), ein oder mehrere Repositories (pro
+  Projekt in `categories.yaml` als `repos:` merkbar und beim nächsten Termin vorausgewählt), Ziel und Teilnehmer,
+  frühere Notizen aus dem Projektordner.
+- **Code-Recherche**: läuft getrennt mit Lese-Werkzeugen (Read/Grep/Glob) nur in den gewählten Repositories und bremst
+  die Live-Fragen nie aus; angestoßen von der Analyse oder per eigener Frage im Reiter *Code*.
+- **Modell**: pro Sitzung `claude -p` mit deinem Abo oder über den LiteLLM-Gateway, je ein Modell für Analyse und
+  Recherche; auf Wunsch als Standard gespeichert.
+- **Prozessbibliothek**: *In Vault speichern* schreibt `<Projektordner>/Prozesse/<Name>.md` (Mermaid-Diagramm, offene
+  Fragen, Änderungshistorie, Modell als JSON). *Aus Bibliothek laden* holt ihn ins nächste Meeting – als bestätigt; der
+  Assistent verfeinert ihn und markiert Abweichungen.
+- **Übergabe**: Landet das Transkript in der Inbox, wird es über die Startzeit mit der Live-Sitzung verknüpft; die
+  abgelegte Notiz bekommt einen Abschnitt „Live-Assistent“ mit Fragen, Annahmen, offenen Punkten und den Prozessen.
+
+Lange Meetings bleiben schnell: Die letzten 15 Minuten gehen wörtlich in den Prompt, der ältere Teil als fortlaufende
+Zusammenfassung. Sitzungen liegen in `live/` (nicht im Git). Optional in `config.yaml`:
+
+```yaml
+live:
+  takt_s: 75        # automatische Analyse höchstens so oft
+  fenster_min: 15   # wörtlicher Teil des Transkripts
+  mitteilung: true  # Mitteilung, wenn eine Aufnahme startet
+```
+
 ### Einstellungen auf der Review-Seite
 
 Der Button „Einstellungen“ zeigt alle lokalen Dateien zum Ansehen und Bearbeiten:
@@ -347,7 +393,9 @@ im Script der Review-Seite.
 | `server.py` | Dienst: Inbox überwachen, Analyse, Review-Seite + API |
 | `debrief.py` | Analyse (Prompt, Schema), Notiz rendern/ablegen; auch als CLI nutzbar |
 | `importer.py` | Import aus Ordnern, per Drag & Drop und aus der Zwischenablage (Suche, Vorschau, Teams-Chat-Köpfe, Kopie in die Inbox) |
-| `tests/` | Tests für Todo-Zuordnung, Chat-Import und Duplikate (`mise run test`) |
+| `live.py`, `macwhisper.py` | Live-Assistent (Sitzungen, Regeln fürs Zusammenführen, Prompts, Prozessbibliothek) und schreibgeschützter Zugriff auf MacWhispers Datenbank |
+| `static/live.html` | Seite des Live-Assistenten |
+| `tests/` | Tests für Todo-Zuordnung, Chat-Import, Duplikate und den Live-Assistenten (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | Review-Seite und ihre englischen Texte |
 | `config.yaml`, `categories.yaml` | Einstellungen und Kategorien (lokal, nicht im Git); Vorlagen: `config.example.yaml`, `categories.example.yaml` |
 | `mise.toml` | Werkzeuge (`uv`, `terminal-notifier`, `jq`) und Tasks |

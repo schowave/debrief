@@ -643,14 +643,21 @@ def analyze(cfg: dict, meta: dict, body: str, names: dict | None = None, termine
     return result, nutzung
 
 
+READ_TOOLS = ["Read", "Grep", "Glob"]
+
+
 def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
-               model: str | None = None) -> tuple[dict, dict]:
-    """`claude -p` without tools with structured output. Returns (result, usage)."""
+               model: str | None = None, dirs: list[Path] | None = None) -> tuple[dict, dict]:
+    """`claude -p` with structured output. Returns (result, usage). Without `dirs` no tools at all; with `dirs`
+    (e.g. repositories) only the read-only tools, confined to these folders."""
     model = model or cfg.get("model", "sonnet")
+    tools = READ_TOOLS if dirs else []
     cmd = [
         "claude", "-p",
         "--model", model,
-        "--tools", "",
+        "--tools", ",".join(tools),
+        *(["--allowedTools", *tools] if tools else []),
+        *(arg for d in (dirs or [])[1:] for arg in ("--add-dir", str(d))),
         "--strict-mcp-config",
         "--setting-sources", "",
         "--no-session-persistence",
@@ -659,8 +666,8 @@ def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
         "--json-schema", json.dumps(schema),
     ]
     started = time.monotonic()
-    proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=600, cwd=HERE,
-                          env=claude_env(cfg))
+    proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=900 if dirs else 600,
+                          cwd=dirs[0] if dirs else HERE, env=claude_env(cfg))
     if proc.returncode != 0:
         raise RuntimeError(f"claude failed ({proc.returncode}): {proc.stderr or proc.stdout}")
     out = json.loads(proc.stdout)
@@ -763,6 +770,8 @@ def render(meta: dict, body: str, result: dict, cfg: dict, reviewed: bool = Fals
         parts.append("## Meine Todos\n\n" + "\n".join(mine_lines))
     if others:
         parts.append("## Todos anderer\n\n" + "\n".join(format_todo(t, cfg["ich"]) for t in others))
+    if (live := result.get("live_abschnitt")) and live.strip():  # from the live assistant during the meeting
+        parts.append(live.strip())
     if (mail := result.get("followup")) and mail.get("text", "").strip():
         quoted = "\n".join(f"> {line}" if line.strip() else ">" for line in mail["text"].strip().splitlines())
         parts.append(f"## Follow-up-Mail\n\n> [!quote]- Betreff: {mail.get('betreff', '').strip()}\n{quoted}")

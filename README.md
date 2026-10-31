@@ -56,6 +56,9 @@ MacWhisper ──(Obsidian integration)──▶ Vault/transkripts/
   the Tasks template and the Task Board show all projects at a glance
 - **Duplicate detection**, import of older transcripts (folder search, drag & drop, or pasted text such as a Teams
   chat), keyboard shortcuts
+- **Live assistant** during the meeting (`/live`): reads MacWhisper's live transcript, suggests questions, makes its
+  assumptions explicit, models the process with event storming and researches in your repositories – see
+  [Live assistant](#live-assistant)
 - **Event driven**, no polling: FSEvents for the inbox, Server-Sent Events for the page
 - **Private by default:** the page only listens on `127.0.0.1`; configuration and learned data stay local
 
@@ -179,6 +182,48 @@ language of the conversation.
 More details (direct mode, models and cost, calendar, import, duplicates, settings) are in
 [README.de.md](README.de.md).
 
+### Live assistant
+
+`http://debrief.localhost:8765/live` – keep it in its own window next to the call (it never shows up when you share
+a browser tab). When MacWhisper starts recording a meeting, a notification "Open live assistant?" appears and the
+page attaches to the running recording; finished recordings can be analysed in one go or played back as a replay.
+
+- **Transcript** (left): read-only from MacWhisper's database, lines still being rewritten are grey. Click a speaker
+  to name them (calendar invitees are suggested); the names are handed over to the debrief later.
+- **Assistant** (middle): every ~75 s, if new confirmed lines arrived (or right away with *Now*), the model suggests
+  *questions* (top 3 under "Ask now"), *assumptions*, *open points* and *code references*. Pin, mark as asked or
+  answered, drop – dropped ones never come back. Rate assumptions: *correct* / *wrong* (with the correction) become
+  facts for every following run, *unclear* turns into a question. The field at the top takes instructions
+  ("focus on error cases", kept as a chip until removed) and corrections ("the process starts with the approval",
+  turned into a fact automatically).
+- **Process** (right): an event storming board on process level – actor → command → domain event → policy, read
+  models, external systems, aggregates and hotspots, one lane per actor or bounded context. Open questions show as
+  red numbered hotspots on the elements they are about. Edit directly (click, drag, connect); everything you touch
+  or confirm is locked and the assistant only *proposes* changes to it; deleted elements are not added again.
+  Several processes per meeting as tabs.
+- **Context** (header): calendar event, category/project (suggested from the event), one or more repositories
+  (remembered per project in `categories.yaml` as `repos:`), goal and participants, earlier notes from the project
+  folder.
+- **Code research**: runs separately with read-only tools (Read/Grep/Glob) in the chosen repositories, so it never
+  blocks the live questions; triggered by the analysis or by your own question in the *Code* tab.
+- **Model**: per session `claude -p` with your subscription or the LiteLLM gateway, one model for the analysis and
+  one for the research.
+- **Process library**: *Save to vault* writes `<project folder>/Prozesse/<name>.md` (Mermaid diagram, open
+  questions, change history, the model as JSON). *Load from library* brings it into the next meeting as confirmed
+  – the assistant refines it and flags deviations.
+- **Hand-over**: when the transcript arrives in the inbox, it is linked to the live session (same start time); the
+  filed note gets a section "Live-Assistent" with questions, assumptions, open points and the processes.
+
+Long meetings stay fast: the last 15 minutes go into the prompt verbatim, older parts as a running summary.
+Sessions are stored in `live/` (git-ignored). Optional settings in `config.yaml`:
+
+```yaml
+live:
+  takt_s: 75        # automatic analysis at most this often
+  fenster_min: 15   # verbatim part of the transcript
+  mitteilung: true  # notification when a recording starts
+```
+
 ## Updating the code
 
 | Changed | Takes effect |
@@ -196,6 +241,8 @@ More details (direct mode, models and cost, calendar, import, duplicates, settin
 | `server.py` | service: watch the inbox, analysis, review page + API |
 | `debrief.py` | analysis (prompt, schema), render/file notes; also usable as a CLI |
 | `importer.py` | import from folders, drag & drop and the clipboard (Teams chat headers) |
+| `live.py`, `macwhisper.py` | live assistant (sessions, merge rules, prompts, process library) and read-only access to MacWhisper's database |
+| `static/live.html` | live assistant page |
 | `tests/` | tests for todo routing, chat import and duplicates (`mise run test`) |
 | `static/index.html`, `static/i18n.js` | review page and its English texts |
 | `config.example.yaml`, `categories.example.yaml` | templates for your local `config.yaml` / `categories.yaml` |

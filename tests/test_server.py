@@ -71,3 +71,18 @@ def test_sorted_by_recording_date_newest_first(store):
                                        ("c" * 12, "", "2026-10-05T08:00:00")]:
         store.put({"id": item_id, "datei": f"{item_id}.md", "aufgenommen": recorded, "erstellt": created})
     assert [i["id"][0] for i in store.all()] == ["b", "c", "a"]
+
+
+def test_live_session_hands_over_speaker_names(store, tmp_path):
+    import live
+    store.live = live.LiveManager({"kategorien": {}}, db=tmp_path / "none.sqlite", directory=tmp_path / "live")
+    sitzung = live.new_session({"id": "C" * 32, "titel": "T", "start": "2026-10-30T13:00:00+01:00"}, {})
+    sitzung["sprecher_namen"] = {"Speaker 2": "Erika Muster", "Speaker 9": "Nicht dabei"}
+    store.live.put(sitzung)
+    path = store.inbox / "Meeting.md"
+    path.write_text(f"---\nRecorded At: 2026-10-30T13:00:40+01:00\nSpeakers:\n- Speaker 2\n---\nSpeaker 2\n{TEXT}\n")
+    os.utime(path, (1_000_000, 1_000_000))
+    store.scan()
+    item = store.all()[0]
+    assert item["live"] == "C" * 32
+    assert item["sprecher_namen"] == {"Speaker 2": "Erika Muster"}

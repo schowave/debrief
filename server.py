@@ -36,6 +36,7 @@ import yaml
 import urllib.parse
 
 import importer
+import live
 
 from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, collect_project_todos, is_me, analyze, calendar_candidates, find_duplicate, fingerprint,
                        followup, gateway_models, index_vault, load_fingerprints, save_fingerprints, set_default_model, is_placeholder_speaker, rename_in_result, load_config, load_gelernt,
@@ -48,6 +49,7 @@ DUPLIKATE = HERE / "duplicates.json"  # automatically discarded duplicates (for 
 MAX_ABGELEGT = 30
 TRASH = Path.home() / ".Trash"
 INDEX_HTML = HERE / "static" / "index.html"
+LIVE_HTML = HERE / "static" / "live.html"
 I18N_JS = HERE / "static" / "i18n.js"
 FALLBACK_S = 60  # safety check of the inbox in case a filesystem event is lost
 SSE_KEEPALIVE_S = 25
@@ -76,6 +78,7 @@ class Store:
         self.changed = threading.Condition()  # state changed -> notify open pages (SSE)
         self.version = 0
         self.jobs: queue.Queue[str] = queue.Queue()
+        self.live: live.LiveManager | None = None  # live sessions, to hand over speaker names and results
         PENDING.mkdir(exist_ok=True)
 
     @property
@@ -220,6 +223,13 @@ class Store:
             if is_dup and not too_short:
                 log.info("Possible duplicate (%.0f %%) of %s: %s", dup_sim * 100, dup["titel"], src.name)
                 continue
+            if self.live and (sitzung := self.live.session_for_recording(meta.get("Recorded At"))):
+                item = self.get(item_id)
+                item["live"] = sitzung["id"]
+                names = {k: v for k, v in sitzung["sprecher_namen"].items() if k in speakers and v}
+                if names:
+                    item["sprecher_namen"] = names
+                self.put(item)
             if not too_short:
                 termine = calendar_candidates(self.cfg, meta)
                 item = self.get(item_id)
@@ -533,7 +543,7 @@ def clean_result(r: dict) -> dict:
     }
 
 
-def make_handler(store: Store):
+def make_handler(store: Store, lm: live.LiveManager | None = None):
     cfg = store.cfg
 
     class Handler(BaseHTTPRequestHandler):
@@ -595,12 +605,169 @@ def make_handler(store: Store):
                 "vault_name": cfg["vault"].name,
             }
 
+        # --- Live assistant ---------------------------------------------------------------------------
+
+        def live_meta(self, s: dict) -> dict:
+            k = s["kontext"]
+            termin = (k.get("termine") or [None])[k["termin_index"]] if k.get("termine") and k.get("termin_index") is not None else None
+            teilnehmer = [p.get("name") or p.get("email") for p in (termin or {}).get("teilnehmer", [])]
+            return {"kategorien": cfg["kategorien"], "ich": cfg["ich"], "sprache": cfg.get("sprache", "de"),
+                    "namen": sorted(set(filter(None, teilnehmer + load_gelernt()["namen"]))),
+                    "repos_bekannt": live.known_repos(cfg), "gateway": bool(cfg.get("gateway")),
+                    "vault_name": cfg["vault"].name}
+
+        def stream_live(self, sid: str) -> None:
+            """Server-Sent Events for the live page: changed transcript lines and the session state."""
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            sent: dict[str, str] = {}
+            last_state, last_labels, version, quiet = None, None, -1, 0.0
+            try:
+                while True:
+                    s = lm.get(sid)
+                    zeilen, labels = lm.visible_lines(s)
+                    changed = [z for z in zeilen if sent.get(z["id"]) != (z["stand"], z["text"])]
+                    if changed or labels != last_labels:
+                        sent.update({z["id"]: (z["stand"], z["text"]) for z in changed})
+                        self.wfile.write(f"event: zeilen\ndata: {json.dumps({'zeilen': changed, 'sprecher': labels}, ensure_ascii=False)}\n\n".encode())
+                        last_labels = labels
+                    data = json.dumps(s, ensure_ascii=False, default=str)
+                    if data != last_state:
+                        self.wfile.write(f"event: sitzung\ndata: {data}\n\n".encode())
+                        last_state = data
+                    if time.monotonic() - quiet > SSE_KEEPALIVE_S:
+                        self.wfile.write(b": keepalive\n\n")
+                        quiet = time.monotonic()
+                    self.wfile.flush()
+                    version = lm.wait_change(version, 1.0)  # replays advance with the clock
+            except (BrokenPipeError, ConnectionResetError, OSError, KeyError):
+                pass
+
+        def live_get(self, path: str) -> None:
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            if path == "/live":
+                raw = LIVE_HTML.read_bytes()
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+            elif path == "/api/live/meetings":
+                self.send_json({"meetings": lm.meetings(int((query.get("n") or ["15"])[0]))})
+            elif path == "/api/live/modelle":
+                self.send_json({"gateway": gateway_models(cfg) if cfg.get("gateway") else [],
+                                "direkt": ["sonnet", "opus", "haiku"], "standard": lm.settings()})
+            elif m := re.fullmatch(r"/api/live/(\w+)", path):
+                s = lm.open_session(m[1])
+                zeilen, labels = lm.visible_lines(s)
+                self.send_json({"sitzung": s, "zeilen": zeilen, "sprecher": labels, **self.live_meta(s)})
+            elif m := re.fullmatch(r"/api/live/(\w+)/events", path):
+                lm.get(m[1])
+                self.stream_live(m[1])
+            elif m := re.fullmatch(r"/api/live/(\w+)/bibliothek", path):
+                k = lm.get(m[1])["kontext"]
+                self.send_json({"prozesse": live.list_library(cfg, k.get("kategorie"), k.get("projekt"))})
+            elif m := re.fullmatch(r"/api/live/(\w+)/notizen", path):
+                k = lm.get(m[1])["kontext"]
+                self.send_json({"notizen": live.project_notes(cfg, k.get("kategorie"), k.get("projekt"))})
+            else:
+                self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
+
+        def live_post(self, path: str, body: dict) -> None:
+            m = re.fullmatch(r"/api/live/(\w+)/([\w-]+)", path)
+            if not m:
+                raise KeyError(path)
+            sid, action = m[1], m[2]
+            lm.get(sid)
+            if action == "start":
+                lm.start(sid, body.get("modus", "live"), float(body.get("tempo") or 10))
+            elif action == "pause":
+                lm.update(sid, lambda s: s.update(pausiert=bool(body.get("pausiert"))))
+                if not body.get("pausiert"):
+                    lm.trigger(sid)
+            elif action == "stopp":
+                lm.update(sid, lambda s: s.update(aktiv=False, replay=None))
+            elif action == "jetzt":
+                lm.trigger(sid)
+            elif action == "kontext":
+                repos = [live.check_repo(r) for r in body.get("repos", [])] if "repos" in body else None
+
+                def ctx(s):
+                    k = s["kontext"]
+                    for key in ("kategorie", "projekt", "freitext"):
+                        if key in body:
+                            k[key] = (str(body[key] or "").strip() or None) if key != "freitext" else str(body[key] or "")
+                    if "termin_index" in body:
+                        idx = body["termin_index"]
+                        if idx is not None and not 0 <= int(idx) < len(k.get("termine") or []):
+                            raise ValueError("Unknown appointment")
+                        k["termin_index"] = idx
+                    if "notizen" in body:
+                        k["notizen"] = [str(n) for n in body["notizen"] if live.safe_folder(cfg, str(n)).is_file()]
+                    if repos is not None:
+                        k["repos"] = repos
+                    if "kategorie" in body and "repos" not in body:  # other project: its remembered repositories
+                        k["repos"] = live.project_repos(cfg, k["kategorie"], k["projekt"])
+                    k["bestaetigt"] = True
+                lm.update(sid, ctx)
+                if body.get("repos_merken"):
+                    s = lm.get(sid)
+                    live.remember_repos(cfg, s["kontext"]["kategorie"], s["kontext"]["projekt"], s["kontext"]["repos"])
+                    reload_kategorien(cfg)
+            elif action == "repo-waehlen":
+                self.send_json({"repos": importer.choose_folders()})
+                return
+            elif action == "sprecher":
+                lm.update(sid, lambda s: s["sprecher_namen"].update({str(body["label"]): str(body.get("name") or "").strip()}))
+            elif action == "anweisung":
+                lm.update(sid, lambda s: live.add_instruction(s, str(body.get("text") or ""), bool(body.get("einmalig"))))
+                lm.trigger(sid)
+            elif action == "anweisung-loeschen":
+                lm.update(sid, lambda s: s.update(anweisungen=[a for a in s["anweisungen"] if a["id"] != body["id"]]))
+            elif action == "fakt-loeschen":
+                lm.update(sid, lambda s: s.update(fakten=[f for f in s["fakten"] if f["id"] != body["id"]]))
+            elif action == "eintrag":
+                lm.update(sid, lambda s: live.set_entry_status(s, str(body["id"]), str(body["status"]), body.get("notiz")))
+            elif action == "eintrag-neu":
+                lm.update(sid, lambda s: live.add_entry(s, str(body.get("typ") or "frage"), str(body.get("text") or "")))
+            elif action == "prozess":
+                lm.update(sid, lambda s: live.edit_process(s, body))
+            elif action == "vorschlag":
+                lm.update(sid, lambda s: live.decide_proposal(s, str(body["id"]), bool(body.get("annehmen"))))
+            elif action == "recherche":
+                lm.research(sid, str(body.get("frage") or ""))
+            elif action == "modell":
+                known = {m2["id"] for m2 in gateway_models(cfg)}
+                weg = "gateway" if body.get("weg") == "gateway" and cfg.get("gateway") else "direkt"
+                modell = {"weg": weg, **{k: str(body.get(k) or "").strip() for k in ("analyse", "recherche")}}
+                for k in ("analyse", "recherche"):
+                    if not modell[k] or (weg == "gateway" and known and modell[k] not in known):
+                        raise ValueError(f"Unknown model: {modell[k]}")
+                lm.update(sid, lambda s: s.update(modell=modell))
+                if body.get("standard"):
+                    lm.save_settings(modell)
+            elif action == "bibliothek-laden":
+                lm.update(sid, lambda s: live.load_library_process(cfg, s, str(body["pfad"])))
+            elif action == "bibliothek-speichern":
+                rel = {}
+                lm.update(sid, lambda s: rel.update(pfad=live.save_library_process(
+                    cfg, s, str(body["prozess"]), body.get("name"), bool(body.get("als_neu")))))
+                self.send_json({"pfad": rel["pfad"], "url": obsidian_url(cfg, Path(rel["pfad"]))})
+                return
+            else:
+                raise KeyError(action)
+            self.send_json({"ok": True})
+
         def do_GET(self):
             path = self.path.split("?")[0]
             with store.lock:
                 reload_kategorien(cfg)
             try:
-                if path == "/":
+                if path.startswith("/api/live/") or path == "/live":
+                    self.live_get(path)
+                elif path == "/":
                     raw = INDEX_HTML.read_bytes()
                     self.send_response(HTTPStatus.OK)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -654,7 +821,12 @@ def make_handler(store: Store):
                 reload_kategorien(cfg)
             try:
                 body = self.read_json()
-                if m := re.fullmatch(r"/api/items/(\w+)/ablegen", path):
+                if path.startswith("/api/live/"):
+                    try:
+                        self.live_post(path, body)
+                    except KeyError:  # not the inbox message "already filed?"
+                        self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
+                elif m := re.fullmatch(r"/api/items/(\w+)/ablegen", path):
                     item = store.get(m[1])
                     body["ergebnis"] = clean_result(body["ergebnis"])
                     vorschlag = item["ergebnis"]["kategorie"]
@@ -665,6 +837,11 @@ def make_handler(store: Store):
                     names = {k: v for k, v in (body.get("sprecher_namen") or {}).items() if k in item.get("sprecher", [])}
                     if termin := chosen_termin(item):
                         body["ergebnis"]["termin"] = termin["titel"]
+                    if item.get("live") and store.live:
+                        try:
+                            body["ergebnis"]["live_abschnitt"] = live.note_section(store.live.get(item["live"]))
+                        except KeyError:
+                            pass
                     apply_additions(cfg, body)
                     with store.lock:
                         dest = write_note(store.source(item), cfg, body["ergebnis"], reviewed=True, names=names)
@@ -858,11 +1035,14 @@ def main() -> None:
                         handlers=[logging.StreamHandler(), logging.FileHandler(HERE / "debrief.log")])
     cfg = load_config(args.config)
     store = Store(cfg)
+    lm = live.LiveManager(cfg, notify=lambda title, msg, path, group: store.notify_text(title, msg, review_url(cfg) + path, group))
+    store.live = lm
+    lm.start_threads()
     threading.Thread(target=store.watch, daemon=True).start()
     threading.Thread(target=store.work, daemon=True).start()
 
     port = cfg.get("review", {}).get("port", 8765)
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(store))
+    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(store, lm))
     log.info("Review page: %s", review_url(cfg))
     server.serve_forever()
 

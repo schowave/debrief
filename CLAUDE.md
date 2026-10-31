@@ -1,2 +1,3 @@
-- The review page is a single file, `static/index.html` (inline script); its English texts live in `static/i18n.js` – every new UI string gets an entry there.
-- `mise run check` = lint + tests (also the pre-commit hook). After changing `server.py` or `debrief.py`, `mise run restart` reloads the running service.
+- The review page is a single file, `static/index.html` (inline script), the live assistant `static/live.html`; their English texts live in `static/i18n.js` – every new UI string gets an entry there.
+- `mise run check` = lint + tests (also the pre-commit hook). After changing `server.py`, `debrief.py`, `live.py` or `macwhisper.py`, `mise run restart` reloads the running service.
+- MacWhisper's database is only ever opened read-only (`macwhisper.py`).
