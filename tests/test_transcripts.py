@@ -69,7 +69,7 @@ def test_pasted_chat_and_plain_text():
 
 
 def test_imported_transcript_becomes_a_session_and_can_be_attached(tmp_path, monkeypatch):
-    from test_live import make_db
+    from livedata import make_db
     db = make_db(tmp_path / "main.sqlite")
     lm = live.LiveManager({"kategorien": {}, "kategorien_datei": tmp_path / "c.yaml", "ich": "Ich"}, db=db, directory=tmp_path / "live")
     monkeypatch.setattr(lm, "_calendar", lambda sid: None)

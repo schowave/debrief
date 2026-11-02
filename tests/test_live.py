@@ -12,38 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import live  # noqa: E402
 import macwhisper as mw  # noqa: E402
-
-SID = uuid.UUID(int=1).bytes
-SPK = uuid.UUID(int=2).bytes
-
-
-def make_db(path: Path, running: bool = True, start: str = "2026-10-30 12:00:00.000") -> Path:
-    """Tiny database in MacWhisper's schema (only the columns we read)."""
-    con = sqlite3.connect(path)
-    con.executescript("""
-        create table recordedmeeting (id blob primary key, title text, appName text, matchedCalendarTitle text);
-        create table session (id blob primary key, dateCreated text, playbackDuration real, transcriptionDidSucceed int,
-                              recordedMeetingID blob, userChosenTitle text, aiTitle text, dateDeleted text);
-        create table speaker (id blob primary key, name text);
-        create table transcriptline (id blob primary key, dateCreated text, dateUpdated text, text text, start int,
-                                     end int, sessionId blob, speakerID blob, orderIndex int, isConfirmed int);
-    """)
-    con.execute("insert into recordedmeeting values (?, 'Teams Meeting', 'Teams', 'Prozess-Workshop')", (b"m",))
-    con.execute("insert into session values (?, ?, 0, ?, ?, null, null, null)", (SID, start, None if running else 1, b"m"))
-    con.execute("insert into speaker values (?, null)", (SPK,))
-    con.commit()
-    con.close()
-    return path
-
-
-def add_line(db: Path, nr: int, text: str, start_ms: int, updated: str, confirmed: int = 1, spk=SPK,
-             order: int | None | str = "nr") -> None:
-    con = sqlite3.connect(db)
-    con.execute("insert or replace into transcriptline values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (uuid.UUID(int=100 + nr).bytes, updated, updated, text, start_ms, start_ms + 1000, SID, spk,
-                 nr if order == "nr" else order, confirmed))
-    con.commit()
-    con.close()
+from livedata import SID, SPK, add_line, make_db, running_recording  # noqa: E402
 
 
 @pytest.fixture
@@ -646,3 +615,32 @@ def test_new_session_in_the_same_recording_starts_where_it_is_now(tmp_path, db, 
     with pytest.raises(ValueError):
         lm.is_running = lambda s: False
         lm.split(n["id"])  # the recording is not running
+
+
+def test_running_recording_shape_goes_through_the_pipeline(tmp_path, db, monkeypatch):
+    """No orderIndex, a trailing unconfirmed line that MacWhisper later replaces under a new id."""
+    running_recording(db, ["Wir starten.", "Der Kunde stellt einen Antrag.", "Dann prüfen wir"], confirmed=False)
+    lm = live.LiveManager({"kategorien": {}, "kategorien_datei": tmp_path / "c.yaml", "ich": "Ich"}, db=db, directory=tmp_path / "live")
+    sid = SID.hex().upper()
+    monkeypatch.setattr(lm, "_calendar", lambda sid: None)
+    s = lm.open_session(sid)
+    zeilen, _ = lm.visible_lines(s)
+    assert [(z["nr"], z["bestaetigt"]) for z in zeilen] == [(0, True), (1, True), (2, False)]
+    prompts = []
+
+    def fake_claude(cfg, system, prompt, schema, label, model=None, dirs=None):
+        prompts.append(prompt)
+        return {"eintraege": [], "erledigt": [], "aenderungen": [], "recherche": [], "anweisungen": []}, {"kosten_usd": 0}
+    monkeypatch.setattr(live, "run_claude", fake_claude)
+    lm.analyse(sid)
+    assert "Der Kunde stellt einen Antrag." in prompts[0] and "Dann prüfen wir" not in prompts[0]
+    assert lm.get(sid)["analysiert_bis"] == 1  # the unconfirmed line is not counted as analysed
+    con = sqlite3.connect(db)  # MacWhisper confirms: the unconfirmed row goes, a new one with the final text arrives
+    con.execute("delete from transcriptline where text like 'Dann prüfen wir…'")
+    con.commit()
+    con.close()
+    add_line(db, 7, "Dann prüfen wir die Unterlagen.", 8000, "2026-10-30 12:00:30.000", order=None)
+    zeilen, _ = lm.visible_lines(lm.get(sid))
+    assert [(z["nr"], z["text"], z["bestaetigt"]) for z in zeilen][2:] == [(2, "Dann prüfen wir die Unterlagen.", True)]
+    lm.analyse(sid)
+    assert "Dann prüfen wir die Unterlagen." in prompts[1] and lm.get(sid)["analysiert_bis"] == 2

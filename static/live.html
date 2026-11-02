@@ -592,7 +592,7 @@ function scheduleRender() {
     if (!pendingRender) { pendingRender = true; active.addEventListener("blur", () => { pendingRender = false; scheduleRender(); }, { once: true }); }
     renderHeader(); return;
   }
-  renderHeader(); renderSteer(); renderAssist(); renderBoard();
+  renderHeader(); renderTranscript(); renderSteer(); renderAssist(); renderBoard();  // the transcript shows what is not listened to
 }
 function renderAll() {
   if (!S) return;

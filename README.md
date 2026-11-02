@@ -114,8 +114,9 @@ Naming speakers in MacWhisper pays off: the todo assignees will be correct.
 | `mise run dry-run` | analyse the inbox, only print |
 | `mise run sort` | direct mode: file without review |
 | `mise run test` | run the tests in `tests/` |
-| `mise run lint` | lint the review page with ESLint |
+| `mise run lint` | lint the pages with ESLint and the Python code with ruff |
 | `mise run check` | lint and tests (runs before every commit after `mise run hooks`) |
+| `mise run smoke` | click through the live page in headless Chrome against a scratch server (fixture data, model stub; needs Google Chrome) |
 
 ## Configuration
 

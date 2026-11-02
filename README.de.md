@@ -85,8 +85,9 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 | `mise run dry-run` | Inbox analysieren, nur anzeigen |
 | `mise run sort` | Direktmodus: ohne Review einsortieren |
 | `mise run test` | Tests in `tests/` ausführen |
-| `mise run lint` | Review-Seite mit ESLint prüfen |
+| `mise run lint` | die Seiten mit ESLint und den Python-Code mit ruff prüfen |
 | `mise run check` | Lint und Tests (läuft nach `mise run hooks` vor jedem Commit) |
+| `mise run smoke` | die Live-Seite in headless Chrome gegen einen Wegwerf-Server durchklicken (Fixture-Daten, Modell-Stub; braucht Google Chrome) |
 
 `mise run install` und `mise run uninstall` rufen `install.sh` auf.
 

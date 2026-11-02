@@ -66,6 +66,10 @@ description = "Lint the pages (static/, ESLint) and the Python code (ruff)"
 shell = "bash -c"
 run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static && uv run --no-project --with ruff ruff check ."
 
+[tasks.smoke]
+description = "Click through the live page in headless Chrome against a scratch server (fixture data, model stub; needs Google Chrome)"
+run = "uv run --no-project --with playwright --with pyyaml python tests/smoke.py"
+
 [tasks.check]
 description = "Lint and tests – runs before every commit once `mise run hooks` is set up"
 depends = ["lint", "test"]
