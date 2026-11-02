@@ -16,3 +16,4 @@ duplicates.json
 .pytest_cache/
 node_modules/
 live/
+miro_token.json

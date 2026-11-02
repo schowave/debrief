@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import html
 import json
 import logging
 import os
@@ -37,6 +38,7 @@ import urllib.parse
 
 import importer
 import live
+import miro
 
 from debrief import (HERE, MIN_FILE_AGE_S, add_fingerprint, collect_project_todos, is_me, analyze, calendar_candidates, find_duplicate, fingerprint,
                        followup, gateway_models, index_vault, load_fingerprints, save_fingerprints, set_default_model, is_placeholder_speaker, rename_in_result, load_config, load_gelernt,
@@ -226,7 +228,7 @@ class Store:
             if self.live and (sitzung := self.live.session_for_recording(meta.get("Recorded At"))):
                 item = self.get(item_id)
                 item["live"] = sitzung["id"]
-                names = {k: v for k, v in sitzung["sprecher_namen"].items() if k in speakers and v}
+                names = {k: v for k, v in live.names_for_recording(sitzung, meta.get("Recorded At")).items() if k in speakers and v}
                 if names:
                     item["sprecher_namen"] = names
                 self.put(item)
@@ -614,6 +616,8 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
             return {"kategorien": cfg["kategorien"], "ich": cfg["ich"], "sprache": cfg.get("sprache", "de"),
                     "namen": sorted(set(filter(None, teilnehmer + load_gelernt()["namen"]))),
                     "repos_bekannt": live.known_repos(cfg), "gateway": bool(cfg.get("gateway")),
+                    **lm.miro_status(), "review_standard": lm.review_default(),
+                    "review_vorschlag": live.DEFAULT_REVIEW_KRITERIEN,
                     "vault_name": cfg["vault"].name}
 
         def stream_live(self, sid: str) -> None:
@@ -628,10 +632,14 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
                 while True:
                     s = lm.get(sid)
                     zeilen, labels = lm.visible_lines(s)
-                    changed = [z for z in zeilen if sent.get(z["id"]) != (z["stand"], z["text"])]
-                    if changed or labels != last_labels:
-                        sent.update({z["id"]: (z["stand"], z["text"]) for z in changed})
-                        self.wfile.write(f"event: zeilen\ndata: {json.dumps({'zeilen': changed, 'sprecher': labels}, ensure_ascii=False)}\n\n".encode())
+                    changed = [z for z in zeilen if sent.get(z["id"]) != (z["stand"], z["text"], z["nr"])]
+                    removed = sent.keys() - {z["id"] for z in zeilen}
+                    if changed or removed or labels != last_labels:
+                        sent.update({z["id"]: (z["stand"], z["text"], z["nr"]) for z in changed})
+                        for gone in removed:
+                            del sent[gone]
+                        payload = {"zeilen": changed, "entfernt": sorted(removed), "sprecher": labels}
+                        self.wfile.write(f"event: zeilen\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode())
                         last_labels = labels
                     data = json.dumps(s, ensure_ascii=False, default=str)
                     if data != last_state:
@@ -645,6 +653,35 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
             except (BrokenPipeError, ConnectionResetError, OSError, KeyError):
                 pass
 
+        def miro_login(self, path: str) -> None:
+            """OAuth with Miro: /miro/login sends the browser to Miro, Miro sends it back to /miro/callback."""
+            auth = lm.miro_auth()
+            if auth is None:
+                raise KeyError(path)
+            if path == "/miro/login":
+                self.send_response(HTTPStatus.FOUND)
+                self.send_header("Location", auth.login_url())
+                self.end_headers()
+                return
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            fehler = (query.get("error_description") or query.get("error") or [None])[0]
+            if not fehler:
+                try:
+                    auth.callback((query.get("code") or [""])[0], (query.get("state") or [""])[0])
+                except (miro.MiroError, RuntimeError) as e:
+                    fehler = str(e)
+            text = (f"Miro: {html.escape(fehler)}" if fehler
+                    else "Mit Miro verbunden – dieses Fenster schließt sich. / Connected to Miro – this window closes.")
+            script = "" if fehler else ("<script>try { window.opener && window.opener.postMessage('miro-verbunden', '*'); } "
+                                        "catch (e) {} setTimeout(() => window.close(), 800);</script>")
+            raw = (f"<!doctype html><meta charset=utf-8><title>Miro</title><body style='font:15px system-ui;padding:40px'>"
+                   f"<p>{text}</p>{script}").encode()
+            self.send_response(HTTPStatus.BAD_REQUEST if fehler else HTTPStatus.OK)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
         def live_get(self, path: str) -> None:
             query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             if path == "/live":
@@ -656,6 +693,10 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
                 self.wfile.write(raw)
             elif path == "/api/live/meetings":
                 self.send_json({"meetings": lm.meetings(int((query.get("n") or ["15"])[0]))})
+            elif path == "/api/live/transkripte":
+                self.send_json({"transkripte": [{"id": i["id"], "datei": i["datei"], "aufgenommen": i.get("aufgenommen"),
+                                                 "woerter": i.get("woerter"), "dauer": i.get("dauer")}
+                                                for i in store.all() if i.get("status") != "fehler"]})
             elif path == "/api/live/modelle":
                 self.send_json({"gateway": gateway_models(cfg) if cfg.get("gateway") else [],
                                 "direkt": ["sonnet", "opus", "haiku"], "standard": lm.settings()})
@@ -675,7 +716,18 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
             else:
                 self.send_json({"fehler": "Not found"}, HTTPStatus.NOT_FOUND)
 
+        def transcript_text(self, body: dict) -> tuple[str, str]:
+            """Text and file name from a pasted/uploaded text or from an item of the review inbox."""
+            if body.get("item"):
+                src = store.source(store.get(str(body["item"])))
+                return src.read_text(errors="replace"), src.name
+            return str(body.get("text") or ""), str(body.get("name") or "")
+
         def live_post(self, path: str, body: dict) -> None:
+            if path == "/api/live/transkript":  # a session of its own for an existing transcript
+                s = lm.new_session_from_transcript(*self.transcript_text(body))
+                self.send_json({"id": s["id"]})
+                return
             m = re.fullmatch(r"/api/live/(\w+)/([\w-]+)", path)
             if not m:
                 raise KeyError(path)
@@ -688,7 +740,42 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
                 if not body.get("pausiert"):
                     lm.trigger(sid)
             elif action == "stopp":
-                lm.update(sid, lambda s: s.update(aktiv=False, replay=None))
+                lm.update(sid, lambda s: s.update(aktiv=False, replay=None, offen=False))
+            elif action == "prozess-befehl":
+                try:
+                    self.send_json(lm.process_command(sid, str(body.get("text") or ""), body.get("prozess") or None))
+                except RuntimeError as e:  # the model call failed
+                    self.send_json({"fehler": str(e)[:300]}, HTTPStatus.BAD_GATEWAY)
+                return
+            elif action == "review":
+                lm.review(sid, body.get("prozess") or None, body.get("kriterien"), bool(body.get("als_standard")))
+            elif action == "review-befund":
+                try:
+                    self.send_json(lm.review_action(sid, str(body["id"]), str(body.get("aktion") or "")))
+                except ValueError as e:
+                    self.send_json({"fehler": str(e)}, HTTPStatus.BAD_REQUEST)
+                return
+            elif action == "prozess-rueckgaengig":
+                lm.undo_command(sid)
+            elif action == "prozess-neu-erzeugen":
+                lm.regenerate(sid, body.get("prozess") or None, bool(body.get("neu_aufbauen")), str(body.get("hinweis") or ""))
+            elif action == "neue-sitzung":
+                self.send_json({"id": lm.split(sid)["id"]})
+                return
+            elif action == "transkript-anhaengen":
+                lm.attach_transcript(sid, *self.transcript_text(body))
+            elif action == "aufnahme-anhaengen":
+                lm.attach(sid, str(body["id"]))
+            elif action == "mithoeren":
+                ms = lm.recording_ms(lm.get(sid))
+                lm.update(sid, lambda s: live.set_listening(s, bool(body.get("an")), ms))
+            elif action == "ausnehmen":
+                von, bis = int(body["von_ms"]), int(body["bis_ms"])
+                if von >= bis:
+                    raise ValueError("Empty range")
+                lm.update(sid, lambda s: (live.exclude_range if body.get("ausnehmen") else live.include_range)(s, von, bis))
+            elif action == "sprecher-stumm":
+                lm.update(sid, lambda s: live.set_speaker_muted(s, str(body["label"]), bool(body.get("stumm"))))
             elif action == "jetzt":
                 lm.trigger(sid)
             elif action == "kontext":
@@ -750,6 +837,17 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
                     lm.save_settings(modell)
             elif action == "bibliothek-laden":
                 lm.update(sid, lambda s: live.load_library_process(cfg, s, str(body["pfad"])))
+            elif action == "miro":
+                try:
+                    state = lm.miro_sync(sid, body.get("board"))
+                except miro.LoginNeeded as e:
+                    self.send_json({"fehler": str(e), "login": True}, HTTPStatus.UNAUTHORIZED)
+                    return
+                except (miro.MiroError, RuntimeError) as e:
+                    self.send_json({"fehler": str(e)}, HTTPStatus.BAD_GATEWAY)
+                    return
+                self.send_json({"url": state["url"]})
+                return
             elif action == "bibliothek-speichern":
                 rel = {}
                 lm.update(sid, lambda s: rel.update(pfad=live.save_library_process(
@@ -767,6 +865,8 @@ def make_handler(store: Store, lm: live.LiveManager | None = None):
             try:
                 if path.startswith("/api/live/") or path == "/live":
                     self.live_get(path)
+                elif path in ("/miro/login", "/miro/callback"):
+                    self.miro_login(path)
                 elif path == "/":
                     raw = INDEX_HTML.read_bytes()
                     self.send_response(HTTPStatus.OK)

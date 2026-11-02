@@ -93,6 +93,12 @@
   /* Transcript */
   #transcript { padding: 8px 14px 40px; }
   .blk { margin: 10px 0; }
+  .blk .who .ex { margin-left: auto; border: 0; background: none; padding: 2px 4px; color: var(--muted); opacity: .35; border-radius: 6px; line-height: 0; }
+  .blk:hover .who .ex, .blk .who .ex:focus-visible, .blk.out .who .ex { opacity: 1; }
+  .blk .who .ex:hover { color: var(--text); }
+  .ln.out { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); opacity: .6; }
+  .mute-note { margin: 0; padding: 8px 14px; font-size: 12.5px; font-weight: 600; color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-bottom: 1px solid var(--line); }
+  .pill.off { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
   .blk .who { font-size: 12.5px; font-weight: 700; display: flex; gap: 8px; align-items: baseline; }
   .blk .who button { border: 0; background: none; padding: 0; font-weight: 700; color: var(--primary); }
   .blk .who button.ph { color: var(--warn); text-decoration: underline dotted; }
@@ -159,6 +165,36 @@
   .ptabs button.tab { border: 0; background: none; padding: 9px 10px; font-weight: 600; font-size: 13px; color: var(--muted);
                       border-bottom: 2px solid transparent; white-space: nowrap; }
   .ptabs button.tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); }
+  .sk { display: block; height: 12px; border-radius: 6px; margin: 9px 0; background: linear-gradient(90deg, var(--line) 25%, color-mix(in srgb, var(--line) 35%, var(--surface)) 50%, var(--line) 75%);
+        background-size: 200% 100%; animation: sk 1.3s linear infinite; }
+  @keyframes sk { to { background-position: -200% 0; } }
+  @keyframes breathe { 50% { opacity: .55; } }
+  .sk-card { border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; margin-bottom: 10px; pointer-events: none; }
+  .sk-board { display: flex; flex-direction: column; gap: 14px; padding: 12px 6px; }
+  .sk-row { display: flex; gap: 12px; }
+  .sk-row .sk { width: 132px; height: 84px; border-radius: 3px; margin: 0; }
+  .sk-row .gap { width: 132px; }
+  .workbar { display: flex; align-items: center; gap: 8px; padding: 0 14px 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .board-wrap.busy .sticky { animation: breathe 1.4s ease-in-out infinite; }
+  .imp { font-size: 9px; letter-spacing: 1px; color: var(--accent, var(--primary)); cursor: help; }
+  .imp .off { opacity: .25; }
+  @media (prefers-reduced-motion: reduce) { .sk, .board-wrap.busy .sticky { animation: none; } }
+  .pcmd { display: flex; gap: 6px; padding: 0 12px 8px; align-items: center; }
+  .pcmd .input { flex: 1; }
+  .finding { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .finding.done { opacity: .6; }
+  .finding .meta { display: flex; gap: 8px; align-items: center; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .sev { padding: 1px 8px; border-radius: 999px; background: var(--surface-2, var(--bg)); }
+  .sev.hoch { color: var(--danger); } .sev.mittel { color: var(--warn); }
+  .finding p { margin: 6px 0; }
+  .finding .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .drop { border: 2px dashed var(--line); border-radius: 10px; padding: 14px; text-align: center; color: var(--muted); margin-bottom: 10px; }
+  .drop.over { border-color: var(--primary); color: var(--text); }
+  body.solo .cols { grid-template-columns: minmax(0, 1fr); }
+  body.solo .col { min-width: 0; }
+  body.solo .col:not(#c-board) { display: none; }
+  body.solo #c-board { display: flex; border-right: 0; }
+  body.solo #mtabs, body.solo #h-ctrl, body.solo #b-ctx, body.solo #b-model, body.solo #b-attach, body.solo #h-meta, body.solo #b-popout { display: none !important; }
   .btools { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px; align-items: center; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 0 12px 6px; font-size: 11.5px; color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: 4px; }
@@ -172,6 +208,8 @@
   .lane-lbl { font-size: 12px; font-weight: 700; color: var(--muted); writing-mode: horizontal-tb; position: sticky; left: 0; z-index: 2;
               background: var(--bg); padding: 4px 6px; border-right: 2px solid var(--line); align-self: stretch; display: flex; align-items: center; width: 110px; overflow-wrap: anywhere; hyphens: auto; }
   .lane-bg { grid-column: 1 / -1; align-self: stretch; border-bottom: 1px dashed var(--line); pointer-events: none; }
+  .seg-head { align-self: end; justify-self: stretch; text-align: left; border: 0; border-bottom: 2px solid var(--primary); background: none;
+              padding: 4px 2px; font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cell { min-width: 132px; min-height: 84px; border-radius: 6px; }
   .cell.drop { outline: 2px dashed var(--ring); outline-offset: -4px; }
   .sticky { width: 132px; min-height: 84px; padding: 6px 8px 8px; border-radius: 3px; color: var(--s-text); position: relative; z-index: 1;
@@ -219,6 +257,11 @@
   .mt { display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius);
         background: var(--surface); margin-bottom: 8px; text-align: left; }
   .mt:hover { border-color: var(--primary); }
+  .mt-wrap { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .mt-wrap .mt { margin-bottom: 0; }
+  .cont { align-self: flex-start; }
+  .rec-sep { margin: 16px 0 4px; padding: 4px 0; border-top: 1px dashed var(--line); font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
+             text-transform: uppercase; color: var(--muted); }
   .mt .t { font-weight: 600; flex: 1; }
   .mt .s { color: var(--muted); font-size: 12.5px; }
   #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg);
@@ -246,6 +289,10 @@
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="m2 2 20 20"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
   <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
@@ -258,6 +305,7 @@
   <span class="spacer"></span>
   <span class="meta" id="h-meta" data-dyn></span>
   <span id="h-ctrl" data-dyn></span>
+  <button class="btn ghost" id="b-attach" hidden title="Eine weitere MacWhisper-Aufnahme an dieses Meeting anhängen"><svg class="i"><use href="#i-link"/></svg> Aufnahme anhängen</button>
   <button class="btn ghost" id="b-ctx" hidden title="Kontext, Repositories und Sprecher"><svg class="i"><use href="#i-ctx"/></svg> Kontext</button>
   <button class="btn ghost" id="b-model" hidden title="Modell und Weg"><svg class="i"><use href="#i-cpu"/></svg> <span id="h-model" data-dyn>Modell</span></button>
   <div class="seg" role="radiogroup" aria-label="Sprache" id="lang-toggle">
@@ -266,7 +314,8 @@
 </header>
 
 <main id="picker" class="picker" hidden>
-  <h2>Welches Meeting?</h2>
+  <div style="display:flex;align-items:center;gap:10px"><h2 style="flex:1;margin:0">Welches Meeting?</h2>
+    <button class="btn" id="pk-import" title="Ein vorhandenes Transkript von der Platte oder aus der Inbox auswerten"><svg class="i"><use href="#i-open"/></svg> Transkript einfügen</button></div>
   <p class="hint" id="pk-hint">Läuft gerade eine Aufnahme in MacWhisper, geht es automatisch los.</p>
   <div id="pk-list" data-dyn></div>
 </main>
@@ -279,6 +328,7 @@
 <div class="cols" id="cols" hidden>
   <section class="col" id="c-trans">
     <h2>Transkript <span class="spacer"></span><span id="t-count" data-dyn></span></h2>
+    <div class="mute-note" id="t-mute" hidden data-dyn></div>
     <div class="scroll" id="t-scroll"><div id="transcript" data-dyn></div>
       <button class="btn sm" id="to-end" hidden><svg class="i"><use href="#i-down"/></svg> Zum Ende</button></div>
   </section>
@@ -303,12 +353,24 @@
       <button class="btn sm" id="b-add-el"><svg class="i"><use href="#i-plus"/></svg> Element</button>
       <button class="btn sm" id="b-lib-load"><svg class="i"><use href="#i-open"/></svg> Aus Bibliothek laden</button>
       <button class="btn sm" id="b-lib-save"><svg class="i"><use href="#i-save"/></svg> In Vault speichern</button>
+      <button class="btn sm" id="b-proc-regen" title="Den Prozess mit allem neu erzeugen lassen, was inzwischen feststeht"><svg class="i"><use href="#i-bolt"/></svg> Neu erzeugen</button>
+      <button class="btn sm" id="b-review" title="Prozessmodell prüfen lassen: Lücken, Sonderfälle, Verantwortung, Sprache"><svg class="i"><use href="#i-check"/></svg> Review</button>
+      <button class="btn sm" id="b-miro" title="Alle Prozesse als Gesamtbild auf ein Miro-Board zeichnen"><svg class="i"><use href="#i-share"/></svg> Nach Miro</button>
+      <span id="miro-links" data-dyn></span>
       <span class="spacer" style="flex:1"></span>
+      <button class="btn sm" id="b-proc-merge">Zu einem Prozess zusammenführen</button>
+      <button class="btn sm ghost" id="b-popout" title="Den Prozess in einem eigenen Fenster öffnen"><svg class="i"><use href="#i-share"/></svg> Eigenes Fenster</button>
       <button class="btn sm ghost" id="b-proc-rename">Umbenennen</button>
       <button class="btn sm ghost" id="b-proc-del">Prozess löschen</button>
     </div>
+    <form class="pcmd" id="pcmd" autocomplete="off">
+      <input class="input" id="pcmd-text" placeholder="Prozess per Anweisung ändern, z. B. „Füge nach »Projekt angelegt« eine Policy für fehlende Daten ein“" aria-label="Prozess per Anweisung ändern">
+      <button class="btn primary sm" type="submit" id="pcmd-go">Anwenden</button>
+      <button class="btn sm ghost" type="button" id="pcmd-undo" hidden>Rückgängig</button>
+    </form>
     <div class="legend" id="legend" data-dyn></div>
     <div class="props" id="props" data-dyn></div>
+    <div class="workbar" id="workbar" hidden data-dyn></div>
     <div class="board-wrap" id="board-wrap"><div class="board" id="board" data-dyn></div></div>
   </section>
 </div>
@@ -332,6 +394,26 @@
   <div class="dh"><h2 id="lib-title" data-dyn>Bibliothek</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="db" data-dyn id="lib-body"></div>
   <div class="df" id="lib-foot" data-dyn></div>
+</dialog>
+<dialog id="d-regen">
+  <div class="dh"><h2>Prozess neu erzeugen</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db" data-dyn id="regen-body"></div>
+  <div class="df"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="regen-go">Erzeugen</button></div>
+</dialog>
+<dialog id="d-review">
+  <div class="dh"><h2>Review des Prozesses</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db" data-dyn id="review-body"></div>
+  <div class="df" data-dyn id="review-foot"></div>
+</dialog>
+<dialog id="d-import">
+  <div class="dh"><h2 id="imp-title" data-dyn>Transkript einfügen</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db" data-dyn id="imp-body"></div>
+  <div class="df"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="imp-go">Übernehmen</button></div>
+</dialog>
+<dialog id="d-attach">
+  <div class="dh"><h2>Aufnahme anhängen</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db" data-dyn id="attach-body"></div>
+  <div class="df"><button class="btn ghost" data-close>Schließen</button></div>
 </dialog>
 <dialog id="d-spk">
   <div class="dh"><h2>Sprecher benennen</h2><button class="icon-btn" data-close aria-label="Schließen"><svg class="i"><use href="#i-x"/></svg></button></div>
@@ -395,6 +477,9 @@ const STATUS_NAME = { neu: "neu", angepinnt: "angepinnt", gestellt: "gestellt", 
 const OPEN = new Set(["neu", "angepinnt", "gestellt"]);
 
 let sid = location.hash.slice(1) || null;
+// The process alone in its own window (?nur=prozess): same session, same live updates, only the board
+const SOLO = new URLSearchParams(location.search).get("nur") === "prozess";
+if (SOLO) document.body.classList.add("solo");
 let S = null, META = {}, LABELS = {};
 const LINES = new Map();
 const ui = { filter: storeGet("live-filter") || "fragen", proc: null, col: "c-assist", seen: null, noteFor: null, follow: true };
@@ -406,7 +491,7 @@ async function api(path, body) {
   const opts = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
   const res = await fetch(path, opts);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(t(data.fehler || res.statusText));
+  if (!res.ok) throw Object.assign(new Error(t(data.fehler || res.statusText)), { data });
   return data;
 }
 const post = (action, body = {}) => api(`/api/live/${sid}/${action}`, body);
@@ -421,27 +506,32 @@ const loc = () => LANG === "en" ? "en-GB" : "de-DE";
 const fmtTime = d => d.toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 function lineTime(z) { return new Date(new Date(S.start).getTime() + z.start_ms); }
 function speakerName(spk) { const lab = LABELS[spk] ?? "?"; return S?.sprecher_namen?.[lab] || lab; }
-const isPlaceholder = lab => /^(Speaker \d+|Microphone|\?)$/.test(lab);
+const isPlaceholder = lab => /^(Speaker \d+( \(\d+\))?|Microphone|\?)$/.test(lab);
 function closeOnBackdrop(d) { d.addEventListener("click", e => { if (e.target === d || e.target.closest("[data-close]")) d.close(); }); }
 $$("dialog").forEach(closeOnBackdrop);
 
 // ---------- Meeting picker ----------
 async function showPicker() {
   $("#picker").hidden = false; $("#cols").hidden = true; $("#mtabs").hidden = true;
-  ["#b-ctx", "#b-model", "#h-state"].forEach(s => $(s).hidden = true);
+  ["#b-ctx", "#b-model", "#b-attach", "#h-state"].forEach(s => $(s).hidden = true);
   $("#h-title").textContent = ""; $("#h-meta").textContent = ""; $("#h-ctrl").innerHTML = "";
   const load = async () => {
     try {
       const { meetings } = await api("/api/live/meetings");
       const running = meetings.find(m => m.laeuft);
-      if (running && !autoJumped.has(running.id)) { autoJumped.add(running.id); location.hash = running.id; return; }
-      $("#pk-list").innerHTML = meetings.length ? meetings.map(m => `
+      // a new recording that looks like the continuation of a session is offered as such instead of jumping in
+      if (running && !running.fortsetzung_von && !autoJumped.has(running.id)) { autoJumped.add(running.id); location.hash = running.id; return; }
+      $("#pk-list").innerHTML = meetings.length ? meetings.map(m => `<div class="mt-wrap">
         <button class="mt" data-id="${m.id}">
           ${m.laeuft ? `<span class="pill rec">${t("läuft")}</span>` : ""}
           <span class="t">${esc(m.titel)}<br><span class="s">${esc(new Date(m.start).toLocaleString(loc(), { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }))}
             · ${esc(m.app || "")} · ${t("{n} Zeilen", { n: m.zeilen })}${m.sitzung ? " · " + t("schon ausgewertet") : ""}</span></span>
-        </button>`).join("") : `<p class="empty">${t("Noch keine Aufnahmen in MacWhisper.")}</p>`;
+        </button>${m.fortsetzung_von ? `<button class="btn sm primary cont" data-cont="${m.fortsetzung_von.id}" data-new="${m.id}">${icon("link")} ${t("Weiter in: {x}", { x: esc(m.fortsetzung_von.titel) })}</button>` : ""}</div>`).join("") : `<p class="empty">${t("Noch keine Aufnahmen in MacWhisper.")}</p>`;
       $$("#pk-list .mt").forEach(b => b.onclick = () => location.hash = b.dataset.id);
+      $$("#pk-list .cont").forEach(b => b.onclick = () => act(async () => {
+        await api(`/api/live/${b.dataset.cont}/aufnahme-anhaengen`, { id: b.dataset.new });
+        location.hash = b.dataset.cont;
+      }));
     } catch (e) { $("#pk-list").innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
   };
   await load();
@@ -470,17 +560,31 @@ function connectEvents() {
   events.addEventListener("zeilen", e => {
     const d = JSON.parse(e.data);
     LABELS = d.sprecher;
+    (d.entfernt || []).forEach(id => LINES.delete(id));
     d.zeilen.forEach(z => LINES.set(z.id, z));
     renderTranscript();
   });
   events.addEventListener("sitzung", e => { S = JSON.parse(e.data); scheduleRender(); });
   events.onopen = () => { retryMs = 2000; };
-  events.onerror = () => {
-    if (events.readyState !== EventSource.CLOSED) return;
-    setTimeout(() => sid && connectEvents(), retryMs);
+  events.onerror = e => {
+    if (e.target.readyState !== EventSource.CLOSED) return;
+    setTimeout(() => { if (sid && !document.hidden && events?.readyState === EventSource.CLOSED) connectEvents(); }, retryMs);
     retryMs = Math.min(retryMs * 2, 15000);
   };
 }
+// A browser allows 6 connections per address and every open tab keeps one for its live updates: with many tabs
+// the page freezes because new requests wait forever. So background tabs let go and catch up when shown again.
+document.addEventListener("visibilitychange", async () => {
+  if (document.hidden) { events?.close(); events = null; return; }
+  if (!sid || events) return;
+  try {
+    const data = await api(`/api/live/${sid}`);
+    LINES.clear(); data.zeilen.forEach(z => LINES.set(z.id, z));
+    META = data; LABELS = data.sprecher; S = data.sitzung;
+    renderAll();
+    connectEvents();
+  } catch (e) { toast(esc(e.message), true); }
+});
 // Do not re-render the assistant while you are typing an answer into it
 function scheduleRender() {
   const active = document.activeElement;
@@ -498,27 +602,36 @@ function renderAll() {
 // ---------- Header ----------
 function renderHeader() {
   $("#h-title").textContent = S.titel;
+  if (SOLO) document.title = `${t("Prozess")} · ${S.titel}`;
   $("#h-title").title = t("Anderes Meeting wählen");
   const st = $("#h-state");
   st.hidden = false;
   const running = S.laeuft;
   st.className = "pill" + (S.aktiv && !S.pausiert ? (running ? " rec" : "") : "");
   st.textContent = S.replay && S.aktiv ? t("Replay ×{n}", { n: S.replay.tempo }) : !S.aktiv ? (S.beendet ? t("ausgewertet") : running ? t("Aufnahme läuft") : t("bereit"))
-    : S.pausiert ? t("pausiert") : running ? t("hört mit") : t("letzter Lauf");
+    : S.pausiert ? t("pausiert") : isMuted() ? t("hört nicht mit") : running ? t("hört mit") : S.offen ? t("wartet auf Aufnahme") : t("letzter Lauf");
+  if (S.aktiv && !S.pausiert && isMuted()) st.className = "pill off";
   const runs = S.laeufe || [];
   const cost = runs.reduce((a, r) => a + (r.nutzung?.kosten_usd || 0), 0);
   const tokens = runs.reduce((a, r) => a + (r.nutzung?.tokens_ein || 0) + (r.nutzung?.tokens_aus || 0), 0);
   const secs = runs.reduce((a, r) => a + (r.nutzung?.sekunden || 0), 0);
   $("#h-meta").innerHTML = runs.length ? `<span title="${esc(t("Läufe, Tokens, Rechenzeit"))}">${t("{n} Läufe", { n: runs.length })} · ${Math.round(tokens / 1000)}k Tok · ${Math.round(secs)} s${cost ? " · $" + cost.toFixed(2) : ""}</span>` : "";
   const ctrl = [];
+  const history = (S.laeufe || []).length > 0 || S.analysiert_bis >= 0;
   if (!S.aktiv) {
-    ctrl.push(`<button class="btn primary" data-start="${running ? "live" : "sofort"}">${icon("play")} ${running ? t("Mithören starten") : S.beendet ? t("Erneut auswerten") : t("Auswerten")}</button>`);
+    // a session with history carries on where it stopped: questions, assumptions and process stay
+    if (history) ctrl.push(`<button class="btn primary" data-start="fortsetzen" title="${esc(t("Mit allen Fragen, Annahmen und dem Prozess weitermachen. Bleibt offen, bis du beendest."))}">${icon("play")} ${t("Fortsetzen")}</button>`);
+    else ctrl.push(`<button class="btn primary" data-start="${running ? "live" : "sofort"}">${icon("play")} ${running ? t("Mithören starten") : t("Auswerten")}</button>`);
     if (!running) ctrl.push(`<button class="btn" data-start="replay" title="${esc(t("Aufnahme so abspielen, als liefe sie gerade"))}">${t("Replay")}</button>`);
   } else {
+    const muted = isMuted();
+    ctrl.push(`<button class="btn" id="b-listen" aria-pressed="${muted}" title="${esc(t("Mithören aus: ab jetzt geht nichts mehr in die Analyse, bis du wieder einschaltest. (Pause hält nur die Analyse an, danach wird nachgeholt.)"))}">${icon(muted ? "eye" : "eye-off")} ${muted ? t("Wieder mithören") : t("Nicht mithören")}</button>`);
     ctrl.push(`<button class="btn" id="b-now" ${S.analyse_laeuft ? "disabled" : ""} title="${esc(t("Jetzt analysieren"))}">${icon("bolt")} ${t("Jetzt")}</button>`);
     ctrl.push(`<button class="btn" id="b-pause">${icon(S.pausiert ? "play" : "pause")} ${S.pausiert ? t("Weiter") : t("Pause")}</button>`);
     ctrl.push(`<button class="icon-btn" id="b-stop" title="${esc(t("Beenden"))}" aria-label="${esc(t("Beenden"))}">${icon("stop")}</button>`);
   }
+  // the recording goes on: end this session and begin a new one from here
+  if (running && !S.replay) ctrl.push(`<button class="btn" id="b-split" title="${esc(t("Diese Sitzung beenden und eine neue ab jetzt beginnen. Die Aufnahme läuft weiter, die neue Sitzung fängt leer an."))}">${icon("plus")} ${t("Neue Sitzung ab jetzt")}</button>`);
   $("#h-ctrl").innerHTML = ctrl.join(" ");
   $$("#h-ctrl [data-start]").forEach(b => b.onclick = () => act(async () => {
     let tempo = 10;
@@ -529,10 +642,15 @@ function renderHeader() {
     }
     await post("start", { modus: b.dataset.start, tempo });
   }));
+  $("#b-listen") && ($("#b-listen").onclick = () => act(() => post("mithoeren", { an: isMuted() })));
   $("#b-now") && ($("#b-now").onclick = () => act(() => post("jetzt")));
   $("#b-pause") && ($("#b-pause").onclick = () => act(() => post("pause", { pausiert: !S.pausiert })));
+  $("#b-split") && ($("#b-split").onclick = () => {
+    if (!confirm(t("Diese Sitzung beenden und eine neue ab jetzt beginnen? Die Aufnahme läuft weiter."))) return;
+    act(async () => { const r = await post("neue-sitzung"); toast(t("Neue Sitzung gestartet")); location.hash = r.id; });
+  });
   $("#b-stop") && ($("#b-stop").onclick = () => act(() => post("stopp")));
-  $("#b-ctx").hidden = false; $("#b-model").hidden = false;
+  $("#b-ctx").hidden = false; $("#b-model").hidden = false; $("#b-attach").hidden = false;
   const m = S.modell || {};
   $("#h-model").textContent = `${m.analyse || "?"}${m.recherche && m.recherche !== m.analyse ? " / " + m.recherche : ""} · ${m.weg === "gateway" ? "Gateway" : "claude -p"}`;
   const busy = [];
@@ -545,6 +663,14 @@ function renderHeader() {
 
 // ---------- Transcript ----------
 let transcriptFrame = 0;
+const PARAGRAPH_PAUSE_MS = 4000, PARAGRAPH_MAX_MS = 60000;
+// What the assistant listens to: lines in a muted range or from a muted speaker are shown struck through
+// and never reach the analysis (the server filters the same way).
+function isOut(z) {
+  const lab = LABELS[z.sprecher] ?? "?";
+  return (S?.stumm || []).includes(lab) || (S?.ausgenommen || []).some(r => z.start_ms >= r.von_ms && (r.bis_ms == null || z.start_ms < r.bis_ms));
+}
+const isMuted = () => (S?.ausgenommen || []).some(r => r.bis_ms == null);
 function renderTranscript() {
   cancelAnimationFrame(transcriptFrame);
   transcriptFrame = requestAnimationFrame(() => {
@@ -552,21 +678,42 @@ function renderTranscript() {
     const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
     const lines = [...LINES.values()].sort((a, b) => a.nr - b.nr || a.start_ms - b.start_ms);
     const hl = new Set(ui.highlightLines || []);
-    let html = "", last = null;
+    // A new paragraph per speaker change, after a pause or every few minutes, so a single-speaker
+    // recording does not become one wall of text.
+    const blocks = [];
+    let cur = null, blockStart = 0, prevEnd = 0;
     for (const z of lines) {
-      if (z.sprecher !== last) {
-        if (last !== null) html += "</div>";
-        const lab = LABELS[z.sprecher] ?? "?";
-        const name = speakerName(z.sprecher);
-        html += `<div class="blk"><div class="who"><button class="${isPlaceholder(name) ? "ph" : ""}" data-label="${esc(lab)}" title="${esc(t("Sprecher benennen"))}">${esc(name)}</button><time>${fmtTime(lineTime(z))}</time></div>`;
-        last = z.sprecher;
+      const pause = z.start_ms - prevEnd >= PARAGRAPH_PAUSE_MS || z.start_ms - blockStart >= PARAGRAPH_MAX_MS;
+      prevEnd = Math.max(prevEnd, z.ende_ms);
+      if (!cur || z.sprecher !== cur.spk || pause || z.rec !== cur.rec) {
+        cur = { spk: z.sprecher, rec: z.rec, lines: [], repeat: !!cur && z.sprecher === cur.spk && z.rec === cur.rec, newRec: !!cur && z.rec !== cur.rec };
+        blocks.push(cur);
+        blockStart = z.start_ms;
       }
-      html += `<span class="ln${z.bestaetigt ? "" : " unconf"}${hl.has(z.nr) ? " hl" : ""}" id="z${z.nr}"><span class="nr">${z.nr}</span>${esc(z.text)} </span>`;
+      cur.lines.push(z);
     }
-    if (last !== null) html += "</div>";
+    let out = 0;
+    const html = blocks.map(b => {
+      const first = b.lines[0], off = b.lines.every(isOut);
+      const lab = LABELS[b.spk] ?? "?", name = speakerName(b.spk);
+      const von = first.start_ms, bis = b.lines.at(-1).start_ms + 1;
+      const label = off ? t("Wieder auswerten") : t("Nicht auswerten");
+      const ex = `<button class="ex" data-von="${von}" data-bis="${bis}" data-ex="${off ? "" : "1"}" title="${esc(label)}" aria-label="${esc(label)}">${icon(off ? "eye" : "eye-off")}</button>`;
+      const head = b.repeat ? `<time>${fmtTime(lineTime(first))}</time>`
+        : `<button class="${isPlaceholder(name) ? "ph" : ""}" data-label="${esc(lab)}" title="${esc(t("Sprecher benennen"))}">${esc(name)}</button><time>${fmtTime(lineTime(first))}</time>`;
+      const body = b.lines.map(z => {
+        const o = isOut(z); if (o) out++;
+        return `<span class="ln${z.bestaetigt ? "" : " unconf"}${o ? " out" : ""}${hl.has(z.nr) ? " hl" : ""}" id="z${z.nr}"><span class="nr">${z.nr}</span>${esc(z.text)} </span>`;
+      }).join("");
+      const sep = b.newRec ? `<div class="rec-sep">${t("Aufnahme {n}", { n: b.rec + 1 })} · ${esc((S.aufnahmen || [])[b.rec - 1]?.titel || "")}</div>` : "";
+      return `${sep}<div class="blk${off ? " out" : ""}"><div class="who">${head}${ex}</div>${body}</div>`;
+    }).join("");
     $("#transcript").innerHTML = html || `<p class="empty">${S?.laeuft ? t("Warte auf die ersten Sätze …") : t("Noch nichts zu sehen.")}</p>`;
-    $("#t-count").textContent = lines.length ? t("{n} Zeilen", { n: lines.length }) : "";
-    $$("#transcript .who button").forEach(b => b.onclick = () => openSpeakers(b.dataset.label));
+    $("#t-count").textContent = lines.length ? t("{n} Zeilen", { n: lines.length }) + (out ? " · " + t("{n} nicht ausgewertet", { n: out }) : "") : "";
+    $("#t-mute").hidden = !isMuted();
+    $("#t-mute").textContent = isMuted() ? t("Mithören ist aus – neue Zeilen gehen nicht in die Analyse.") : "";
+    $$("#transcript .who button:not(.ex)").forEach(b => b.onclick = () => openSpeakers(b.dataset.label));
+    $$("#transcript .who .ex").forEach(b => b.onclick = () => act(() => post("ausnehmen", { von_ms: Number(b.dataset.von), bis_ms: Number(b.dataset.bis), ausnehmen: !!b.dataset.ex })));
     if (atEnd && ui.follow) box.scrollTop = box.scrollHeight;
     $("#to-end").hidden = atEnd;
   });
@@ -624,10 +771,32 @@ function hotspotNumbers() {
   for (const e of S.eintraege || []) if (OPEN.has(e.status) && e.elemente?.length) nums[e.id] = ++n;
   return nums;
 }
+// How important an entry is right now (0–7.5). The model's priority is only one part - it is given per run and
+// never revisited - so it is combined with what the entry does for the process and with how fresh the part of the
+// conversation is that it refers to. Pinned questions stay on top regardless.
+let curLast = -1;
+function importance(e) {
+  let s = 4 - (e.prio || 2);                                            // priority of the run: 1 → 3, 2 → 2, 3 → 1
+  s += Math.min(2, (e.elemente?.length || 0) * 0.75);                   // about modelled elements: closes a gap in the process
+  if (e.zeilen?.length && curLast >= 0) s += 1.5 / (1 + Math.max(0, curLast - Math.max(...e.zeilen)) / 40);  // still being discussed
+  if (e.quelle === "ich") s += 1;                                       // your own question
+  return s;
+}
+const impLevel = e => { const s = importance(e); return s >= 5 ? 3 : s >= 3.5 ? 2 : 1; };
+const byImportance = (a, b) => importance(b) - importance(a) || b.erstellt.localeCompare(a.erstellt);
+function impHtml(e) {
+  const l = impLevel(e), why = [`${t("Priorität des Assistenten")}: ${e.prio}`];
+  if (e.elemente?.length) why.push(t("betrifft {n} Prozesselemente", { n: e.elemente.length }));
+  if (e.zeilen?.length && curLast - Math.max(...e.zeilen) < 40) why.push(t("gerade im Gespräch"));
+  if (e.quelle === "ich") why.push(t("von dir"));
+  return `<span class="imp" title="${esc(`${t("Wichtigkeit")}: ${t(["niedrig", "mittel", "hoch"][l - 1])} · ${why.join(" · ")}`)}">${"●".repeat(l)}<span class="off">${"●".repeat(3 - l)}</span></span>`;
+}
+const sk = w => `<span class="sk" style="width:${w}"></span>`;
+const skCard = (cls = "") => `<article class="sk-card ${cls}" aria-hidden="true">${sk("28%")}${sk("96%")}${sk("78%")}${sk("52%")}</article>`;
 function topEntries() {
   const open = (S.eintraege || []).filter(e => e.typ === "frage" && OPEN.has(e.status));
   const pinned = open.filter(e => e.status === "angepinnt");
-  const fresh = open.filter(e => e.status === "neu").sort((a, b) => a.prio - b.prio || (b.lauf ?? 0) - (a.lauf ?? 0) || b.erstellt.localeCompare(a.erstellt));
+  const fresh = open.filter(e => e.status === "neu").sort(byImportance);
   return [...pinned, ...fresh.slice(0, 3)];
 }
 function entryActions(e) {
@@ -650,7 +819,7 @@ function entryHtml(e, nums, top = false) {
       <input class="input" name="n" placeholder="${esc(ui.noteFor.status === "stimmt_nicht" ? t("Was stimmt stattdessen?") : t("Antwort (optional)"))}" autocomplete="off">
       <button class="btn sm primary">${t("OK")}</button></form>` : "";
   return `<article class="entry${top ? " top" : ""}${fresh ? " fresh" : ""}${OPEN.has(e.status) || (e.typ === "annahme" && e.status === "neu") ? "" : " done"}" data-entry="${e.id}">
-    <div class="head"><span class="typ ${e.typ}">${t(ENTRY_NAME[e.typ])}</span>${e.prio === 1 && OPEN.has(e.status) ? `<span title="${esc(t("wichtig"))}">●</span>` : ""}
+    <div class="head"><span class="typ ${e.typ}">${t(ENTRY_NAME[e.typ])}</span>${["frage", "offen"].includes(e.typ) && OPEN.has(e.status) ? impHtml(e) : ""}
       ${nums[e.id] ? `<button class="hs" data-hs="${e.id}" title="${esc(t("Im Prozess zeigen"))}">${nums[e.id]}</button>` : ""}${refs}${e.quelle === "ich" ? `<span>${t("von dir")}</span>` : ""}${st}</div>
     <div class="txt">${esc(e.text)}</div>
     ${e.begruendung ? `<div class="why">${esc(e.begruendung)}</div>` : ""}${found}
@@ -660,6 +829,7 @@ function entryHtml(e, nums, top = false) {
 }
 function renderAssist() {
   const entries = S.eintraege || [];
+  curLast = Math.max(-1, ...[...LINES.values()].map(z => z.nr));
   const nums = hotspotNumbers();
   $("#ftabs").innerHTML = FILTERS.map(([key, label, fn]) => {
     const n = entries.filter(fn).length;
@@ -672,6 +842,10 @@ function renderAssist() {
       : t("Diese Aufnahme ist beendet. Du kannst sie komplett auswerten oder als Replay abspielen.")}</p>
       <div class="row"><button class="btn" id="s-ctx">${icon("ctx")} ${t("Kontext setzen")}</button></div></div>`;
   }
+  // while the assistant is analysing: skeletons where the new entries will appear
+  if (S.arbeit === "analyse" && ["fragen", "annahmen", "offen"].includes(ui.filter)) {
+    html += `<div class="sec"><h3>${t("Der Assistent denkt nach …")}</h3>${skCard().repeat(entries.length ? 1 : 3)}</div>`;
+  }
   const top = topEntries();
   const topIds = new Set(top.map(e => e.id));
   if (ui.filter === "fragen" && top.length) {
@@ -679,7 +853,7 @@ function renderAssist() {
   }
   const fn = FILTERS.find(f => f[0] === ui.filter)[2];
   const rest = entries.filter(e => fn(e) && !(ui.filter === "fragen" && topIds.has(e.id)))
-    .sort((a, b) => ui.filter === "erledigt" ? 0 : a.prio - b.prio || b.erstellt.localeCompare(a.erstellt));
+    .sort((a, b) => ui.filter === "erledigt" ? 0 : byImportance(a, b));
   if (ui.filter === "fragen") {
     html += `<div class="sec"><h3>${t("Weitere Fragen")}</h3>${rest.map(e => entryHtml(e, nums)).join("") || `<p class="hint">${t("Keine weiteren.")}</p>`}
       <form id="own-q" class="noteform"><input class="input" name="q" placeholder="${esc(t("Eigene Frage notieren …"))}" autocomplete="off"><button class="btn sm">${icon("plus")}</button></form></div>`;
@@ -723,19 +897,47 @@ function flashEntry(id) {
 }
 
 // ---------- Board (event storming) ----------
+// With several processes the board starts with the big picture: all of them on one time line, every actor in
+// one lane. Elements carry `prozess` there, so edits and moves reach the process they belong to.
+const ALL = "*";
 function currentProc() {
   const procs = S.prozesse || [];
-  if (!procs.find(p => p.id === ui.proc)) ui.proc = procs[0]?.id || null;
-  return procs.find(p => p.id === ui.proc) || null;
+  if (ui.proc === ALL && procs.length > 1) return combinedProc(procs);
+  if (!procs.find(p => p.id === ui.proc)) ui.proc = procs.length > 1 ? ALL : procs[0]?.id || null;
+  return ui.proc === ALL ? combinedProc(procs) : procs.find(p => p.id === ui.proc) || null;
 }
+function combinedProc(procs) {
+  return {
+    id: ALL, name: t("Gesamtbild"), alle: true,
+    elemente: procs.flatMap(p => p.elemente.map(e => ({ ...e, prozess: p.id }))),
+    verbindungen: procs.flatMap(p => p.verbindungen),
+    segmente: procs.map(p => ({ id: p.id, name: p.name, n: p.elemente.length })),
+  };
+}
+const ownerOf = id => (S.prozesse || []).find(p => p.elemente.some(e => e.id === id));
+// the process new elements go to: the open one, in the big picture the last one
+function targetProc() { const p = currentProc(); return p?.alle ? S.prozesse.at(-1) : p; }
 function renderBoard() {
   const procs = S.prozesse || [];
   const p = currentProc();
-  $("#ptabs").innerHTML = procs.map(x => `<button class="tab" data-p="${x.id}" aria-selected="${x.id === ui.proc}">${esc(x.name)}${x.quelle ? " 📚" : ""}</button>`).join("")
+  $("#ptabs").innerHTML = (procs.length > 1 ? `<button class="tab" data-p="${ALL}" aria-selected="${ui.proc === ALL}">${esc(t("Gesamtbild"))}</button>` : "")
+    + procs.map(x => `<button class="tab" data-p="${x.id}" aria-selected="${x.id === ui.proc}">${esc(x.name)}${x.quelle ? " 📚" : ""}</button>`).join("")
     + `<button class="icon-btn" id="b-proc-new" title="${esc(t("Neuer Prozess"))}" aria-label="${esc(t("Neuer Prozess"))}">${icon("plus")}</button>`;
   $$("#ptabs [data-p]").forEach(b => b.onclick = () => { ui.proc = b.dataset.p; renderBoard(); });
   $("#b-proc-new").onclick = () => { const name = prompt(t("Name des Prozesses:")); if (name) act(() => post("prozess", { op: "prozess_neu", name })); };
   ["#b-add-el", "#b-lib-save", "#b-proc-rename", "#b-proc-del"].forEach(s => $(s).disabled = !p);
+  ["#b-lib-save", "#b-proc-rename", "#b-proc-del"].forEach(s => $(s).hidden = !!p?.alle);
+  $("#b-proc-merge").hidden = !p?.alle;
+  $("#b-miro").disabled = !(S.prozesse || []).some(x => x.elemente.length);
+  $("#b-proc-regen").disabled = !p;
+  $("#b-review").disabled = !p;
+  if ($("#d-review").open && !document.activeElement?.matches("#review-body textarea, #review-body input")) renderReview();
+  $("#pcmd-undo").hidden = !S.rueckgaengig;
+  $("#pcmd-undo").title = S.rueckgaengig ? t("Rückgängig: {x}", { x: S.rueckgaengig }) : "";
+  $("#miro-links").innerHTML = S.miro?.url
+    ? `<a class="btn sm ghost" href="${esc(S.miro.url)}" target="_blank" rel="noopener" title="${esc(t("Zuletzt übertragen: {x}", { x: fmtTime(new Date(S.miro.stand)) }))}">${icon("share")} ${t("Board öffnen")}</a><button class="btn sm ghost" id="b-miro-board">${t("Anderes Board …")}</button>`
+    : "";
+  $("#b-miro-board") && ($("#b-miro-board").onclick = () => miroSync(true));
   $("#legend").innerHTML = TYPES.map(k => `<span><i style="background:var(--s-${k})"></i>${t(TYPE_NAME[k])}</span>`).join("")
     + `<span><i style="border:2px dashed var(--muted)"></i>${t("Annahme")}</span><span>${icon("lock")} ${t("gesperrt (von dir)")}</span>`;
   const props = (S.vorschlaege || []).filter(v => p && p.elemente.some(e => e.id === v.element));
@@ -748,6 +950,17 @@ function renderBoard() {
   }).join("");
   $$("[data-pv]").forEach(b => b.onclick = () => act(() => post("vorschlag", { id: b.dataset.pv, annehmen: !!b.dataset.yes })));
   const board = $("#board");
+  const WORK = { analyse: "Der Assistent analysiert …", neu_erzeugen: "Der Prozess wird neu erzeugt …", befehl: "Die Anweisung wird ausgeführt …" };
+  const working = WORK[S.arbeit];
+  $("#workbar").hidden = !working;
+  $("#workbar").innerHTML = working ? `<span class="spin"></span> ${t(working)}` : "";
+  $("#board-wrap").classList.toggle("busy", !!working && !!p);
+  if (!p && working) {
+    board.style.gridTemplateColumns = "";
+    board.innerHTML = `<div class="sk-board" aria-hidden="true">${[0, 1, 2].map(r => `<div class="sk-row">${[0, 1, 2, 3].map(c => c >= r ? `<span class="sk"></span>` : `<span class="gap"></span>`).join("")}</div>`).join("")}</div>`;
+    $("#dl-lanes").innerHTML = "";
+    return;
+  }
   if (!p) {
     board.style.gridTemplateColumns = "";
     board.innerHTML = `<p class="empty">${t("Sobald es im Gespräch um einen Ablauf geht, entsteht hier der Prozess. Du kannst auch einen aus der Bibliothek laden oder selbst anfangen.")}</p>`;
@@ -763,10 +976,23 @@ function renderBoard() {
   const cols = p.elemente.length + 1;
   board.style.gridTemplateColumns = `110px repeat(${cols}, auto)`;
   let html = "";
-  lanes.forEach((lane, r) => {
+  // big picture: a band above the lanes names the process each stretch of the time line comes from
+  const top = p.alle ? 1 : 0;
+  const starts = new Set();
+  if (p.alle) {
+    let c = 2;
+    for (const g of p.segmente) {
+      if (!g.n) continue;
+      starts.add(c);
+      html += `<button class="seg-head" style="grid-row:1;grid-column:${c} / span ${g.n}" data-p="${g.id}" title="${esc(t("Nur diesen Prozess zeigen"))}">${esc(g.name)}</button>`;
+      c += g.n;
+    }
+  }
+  lanes.forEach((lane, i) => {
+    const r = i + top;
     html += `<div class="lane-bg" style="grid-row:${r + 1}"></div><div class="lane-lbl" style="grid-row:${r + 1};grid-column:1">${esc(lane || t("ohne Lane"))}</div>`;
     p.elemente.forEach((e, c) => {
-      const pos = `grid-row:${r + 1};grid-column:${c + 2}`;
+      const pos = `grid-row:${r + 1};grid-column:${c + 2}${starts.has(c + 2) && c ? ";border-left:2px solid var(--line);padding-left:10px" : ""}`;
       if (e.lane !== lane) { html += `<div class="cell" style="${pos}" data-cell="${c}" data-lane="${esc(lane)}"></div>`; return; }
       const cls = [e.typ, e.annahme ? "assumed" : "", e.herkunft === "ich" ? "mine" : ""].join(" ");
       html += `<div class="cell" style="${pos}" data-cell="${c}" data-lane="${esc(lane)}"><div class="sticky ${cls}" role="button" tabindex="0" draggable="true" data-el="${e.id}" title="${esc(t("Klicken zum Bearbeiten, ziehen zum Verschieben"))}">
@@ -777,6 +1003,7 @@ function renderBoard() {
   });
   html += `<svg class="links" id="links"></svg>`;
   board.innerHTML = html;
+  $$("#board .seg-head").forEach(b => b.onclick = () => { ui.proc = b.dataset.p; renderBoard(); });
   $$("#board .sticky").forEach(b => {
     b.onclick = ev => { if (ev.target.closest("[data-hs-el]")) return; openElement(b.dataset.el); };
     b.onkeydown = ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openElement(b.dataset.el); } };
@@ -793,7 +1020,7 @@ function renderBoard() {
       const target = p.elemente[Number(cell.dataset.cell)];
       if (!id || !target) return;
       const from = p.elemente.findIndex(e => e.id === id);
-      const op = { op: "element_verschieben", id, lane: cell.dataset.lane };
+      const op = { op: "element_verschieben", id, lane: cell.dataset.lane, ...(target.prozess ? { prozess: target.prozess } : {}) };
       if (target.id !== id) Object.assign(op, from < Number(cell.dataset.cell) ? { nach: target.id } : { vor: target.id });
       act(() => post("prozess", op));
     };
@@ -808,7 +1035,8 @@ function drawLinks(p) {
   // explicit connections solid; the time line between neighbours that are not connected explicitly dotted
   const out = new Set(p.verbindungen.map(v => v.von)), inc = new Set(p.verbindungen.map(v => v.nach));
   const pairs = [...p.verbindungen.map(v => [v.von, v.nach, false]),
-    ...p.elemente.slice(1).map((e, i) => [p.elemente[i].id, e.id, true]).filter(([a, b]) => !out.has(a) && !inc.has(b))];
+    ...p.elemente.slice(1).map((e, i) => [p.elemente[i], e]).filter(([a, b]) => a.prozess === b.prozess)
+      .map(([a, b]) => [a.id, b.id, true]).filter(([a, b]) => !out.has(a) && !inc.has(b))];
   svg.innerHTML = pairs.map(([a, b, dashed]) => {
     const ea = $(`[data-el="${a}"]`), eb = $(`[data-el="${b}"]`);
     if (!ea || !eb) return "";
@@ -822,7 +1050,7 @@ window.addEventListener("resize", () => { const p = S && currentProc(); if (p) d
 function flashElements(ids) {
   const owner = (S.prozesse || []).find(p => p.elemente.some(e => ids.includes(e.id)));
   if (!owner) return;
-  if (ui.proc !== owner.id) { ui.proc = owner.id; renderBoard(); }
+  if (ui.proc !== owner.id && ui.proc !== ALL) { ui.proc = owner.id; renderBoard(); }
   showCol("c-board");
   requestAnimationFrame(() => ids.forEach(id => {
     const el = $(`[data-el="${id}"]`);
@@ -832,9 +1060,150 @@ function flashElements(ids) {
   }));
 }
 
+// Pop the process out into a window of its own
+$("#b-popout").onclick = () => window.open(`/live?nur=prozess#${sid}`, `prozess-${sid}`, "popup=yes,width=1360,height=880");
+
+// Change the process by instruction; everything it does counts as your own edit and can be undone
+$("#pcmd").onsubmit = ev => {
+  ev.preventDefault();
+  const text = $("#pcmd-text").value.trim();
+  if (!text) return;
+  const p = currentProc(), input = $("#pcmd-text"), go = $("#pcmd-go");
+  input.disabled = go.disabled = true;
+  act(async () => {
+    try {
+      const r = await post("prozess-befehl", { text, prozess: p && !p.alle ? p.id : null });
+      if (r.angewendet) input.value = "";
+      const miss = r.fehler?.length ? ` · ${t("{n} Schritte nicht möglich", { n: r.fehler.length })}` : "";
+      toast(esc(r.antwort || t("Erledigt")) + miss, !r.angewendet);
+    } finally { input.disabled = go.disabled = false; input.focus(); }
+  });
+};
+$("#pcmd-undo").onclick = () => act(async () => { await post("prozess-rueckgaengig"); toast(t("Rückgängig gemacht")); });
+
+// Generate the process again from everything known now
+$("#b-proc-regen").onclick = () => {
+  const procs = S.prozesse || [], p = currentProc();
+  if (!p) return;
+  const one = !p.alle && procs.length > 1;
+  const locked = (one ? p.elemente : procs.flatMap(x => x.elemente)).filter(e => e.gesperrt).length;
+  $("#regen-body").innerHTML = `<p class="hint">${t("Der Assistent baut den Prozess mit allem auf, was inzwischen feststeht: Gespräch, beantwortete Fragen, bewertete Annahmen und Anweisungen.")}</p>
+    ${one ? `<div class="list"><label><input type="radio" name="rg-scope" value="one" checked> ${t("Nur „{x}“", { x: esc(p.name) })}</label>
+      <label><input type="radio" name="rg-scope" value="all"> ${t("Alle Prozesse")}</label></div>` : ""}
+    <h3 class="lbl">${t("Wie?")}</h3>
+    <div class="list"><label><input type="radio" name="rg-mode" value="rev" checked> <b>${t("Überarbeiten")}</b> <span class="sub">${t("Behält, was noch stimmt; korrigiert, ordnet, ergänzt und entfernt.")}</span></label>
+      <label><input type="radio" name="rg-mode" value="new"> <b>${t("Neu aufbauen")}</b> <span class="sub">${t("Nur deine gesperrten Elemente bleiben ({n}), alles andere wird neu erzeugt.", { n: locked })}</span></label></div>
+    <label class="lbl" for="rg-hint">${t("Was hat sich geändert? (optional)")}</label>
+    <textarea class="textarea" id="rg-hint" rows="3" placeholder="${esc(t("z. B. „Die Prüfung macht jetzt der Sachbearbeiter, nicht mehr der Manager“"))}"></textarea>
+    <p class="hint">${t("Der Schritt lässt sich mit „Rückgängig“ zurücknehmen.")}</p>`;
+  $("#regen-go").disabled = !!S.analyse_laeuft;
+  $("#regen-go").onclick = () => act(async () => {
+    await post("prozess-neu-erzeugen", { prozess: one && $("input[name=rg-scope]:checked").value === "one" ? p.id : null,
+      neu_aufbauen: $("input[name=rg-mode]:checked").value === "new", hinweis: $("#rg-hint").value });
+    $("#d-regen").close();
+    toast(t("Prozess wird neu erzeugt …"));
+  });
+  $("#d-regen").showModal();
+};
+
+// Review: what to look at, findings with your decision on each
+const SEV = { hoch: "hoch", mittel: "mittel", niedrig: "niedrig" };
+const CAT = { vollstaendigkeit: "Vollständigkeit", sonderfaelle: "Sonderfälle", verantwortung: "Verantwortung", sprache: "Fachsprache",
+  entscheidungen: "Entscheidungen", daten_systeme: "Daten & Systeme", granularitaet: "Granularität", konsistenz: "Konsistenz", kennzahlen: "Kennzahlen", sonstiges: "Sonstiges" };
+function renderReview() {
+  const r = S.review, procs = S.prozesse || [], p = currentProc();
+  const one = p && !p.alle && procs.length > 1;
+  const crit = ui.rvCrit ?? (S.review_kriterien || META.review_standard || "");
+  const b = (r?.befunde || []).map(f => {
+    const done = f.status !== "neu";
+    const els = f.elemente.map(id => (S.prozesse || []).flatMap(x => x.elemente).find(e => e.id === id)?.text).filter(Boolean);
+    return `<div class="finding${done ? " done" : ""}" data-f="${f.id}">
+      <div class="meta"><span class="sev ${f.schwere}">${t(SEV[f.schwere] || f.schwere)}</span><span>${t(CAT[f.kategorie] || f.kategorie)}</span>${done ? `<span>· ${t(STATUS_BEFUND[f.status] || f.status)}</span>` : ""}</div>
+      <p><b>${esc(f.beobachtung)}</b></p><p>${esc(f.empfehlung)}</p>
+      ${els.length ? `<p class="hint"><a href="#" data-show="${f.id}">${esc(els.join(" · "))}</a></p>` : ""}
+      ${f.frage ? `<p class="hint">${t("Frage")}: ${esc(f.frage)}</p>` : ""}
+      <div class="acts">
+        ${f.aenderung?.length && f.status === "neu" ? `<button class="btn sm primary" data-act="anwenden">${t("Anwenden")}</button>` : ""}
+        ${f.status === "neu" ? `<button class="btn sm" data-act="frage">${t("Als Frage übernehmen")}</button><button class="btn sm ghost" data-act="verwerfen">${t("Verwerfen")}</button>`
+          : `<button class="btn sm ghost" data-act="zuruecksetzen">${t("Zurücksetzen")}</button>`}
+      </div></div>`;
+  }).join("");
+  $("#review-body").innerHTML = `<details ${r ? "" : "open"}><summary><b>${t("Worauf soll geachtet werden?")}</b> <span class="hint">${t("(Prüfprompt, änderbar)")}</span></summary>
+      <textarea class="textarea" id="rv-crit" rows="12" spellcheck="false">${esc(crit)}</textarea>
+      <div style="display:flex;gap:12px;align-items:center;margin:6px 0 12px"><label class="hint"><input type="checkbox" id="rv-default"> ${t("Als Standard für alle Sitzungen speichern")}</label>
+        <button class="btn sm ghost" type="button" id="rv-reset">${t("Auf Vorschlag zurücksetzen")}</button></div></details>
+    ${one ? `<div class="list"><label><input type="radio" name="rv-scope" value="one" checked> ${t("Nur „{x}“", { x: esc(p.name) })}</label>
+      <label><input type="radio" name="rv-scope" value="all"> ${t("Alle Prozesse")}</label></div>` : ""}
+    ${S.arbeit === "review" ? `<h3 class="lbl">${t("Ergebnis")}</h3>${sk("90%")}${sk("70%")}${skCard().repeat(3)}` : r ? `<h3 class="lbl">${t("Ergebnis")} <span class="hint">· ${esc(r.prozess)} · ${esc(fmtTime(new Date(r.zeit)))}</span></h3>
+      <p>${esc(r.zusammenfassung)}</p>${b || `<p class="hint">${t("Keine Befunde.")}</p>`}` : ""}`;
+  $("#review-foot").innerHTML = `<button class="btn ghost" data-close>${t("Schließen")}</button>
+    <button class="btn primary" id="rv-go" ${S.analyse_laeuft ? "disabled" : ""}>${icon("check")} ${S.analyse_laeuft ? t("läuft …") : r ? t("Erneut prüfen") : t("Prüfen")}</button>`;
+  $("#rv-crit").oninput = e => { ui.rvCrit = e.target.value; };
+  $("#rv-reset").onclick = () => { ui.rvCrit = META.review_vorschlag; $("#rv-crit").value = ui.rvCrit; };
+  $("#rv-go").onclick = () => act(async () => {
+    await post("review", { prozess: one && $("input[name=rv-scope]:checked").value === "one" ? p.id : null,
+      kriterien: $("#rv-crit").value, als_standard: $("#rv-default").checked });
+    toast(t("Review läuft …"));
+  });
+  $$("#review-body [data-act]").forEach(btn => btn.onclick = () => act(async () => {
+    const id = btn.closest("[data-f]").dataset.f;
+    const res = await post("review-befund", { id, aktion: btn.dataset.act });
+    renderReview();
+    if (btn.dataset.act === "anwenden") toast(`${t("Angewendet")}${res.fehler?.length ? ` · ${t("{n} Schritte nicht möglich", { n: res.fehler.length })}` : ""}`);
+  }));
+  $$("#review-body [data-show]").forEach(a => a.onclick = ev => {
+    ev.preventDefault();
+    const f = S.review.befunde.find(x => x.id === a.dataset.show);
+    $("#d-review").close();
+    flashElements(f.elemente);
+  });
+}
+const STATUS_BEFUND = { angewendet: "angewendet", uebernommen: "als Frage übernommen", verworfen: "verworfen" };
+$("#b-review").onclick = () => { ui.rvCrit = undefined; renderReview(); $("#d-review").showModal(); };
+
+// Existing transcripts (a file from disk, pasted text or one from the review inbox) as a session of their own
+// or attached to this one
+let importMode = null;
+async function openImport(mode) {
+  importMode = mode;
+  $("#imp-title").textContent = mode === "anhaengen" ? t("Transkript anhängen") : t("Transkript einfügen");
+  const { transkripte } = await api("/api/live/transkripte").catch(() => ({ transkripte: [] }));
+  $("#imp-body").innerHTML = `<div class="drop" id="imp-drop">${t("Datei hierher ziehen oder")} <label class="btn sm" style="margin-left:6px">${t("Datei wählen …")}
+      <input type="file" id="imp-file" accept=".md,.txt,.vtt,.srt,text/*" hidden></label><div class="hint" id="imp-name"></div></div>
+    <label class="lbl" for="imp-text">${t("… oder Text einfügen")}</label>
+    <textarea class="textarea" id="imp-text" rows="5" placeholder="${esc(t("MacWhisper-Export, Teams-Chat, VTT/SRT oder „Name: Text“"))}"></textarea>
+    ${transkripte.length ? `<label class="lbl" for="imp-item">${t("… oder aus der Inbox")}</label><select class="input" id="imp-item"><option value="">–</option>
+      ${transkripte.map(x => `<option value="${x.id}">${esc(x.datei)}${x.woerter ? ` · ${t("{n} Wörter", { n: x.woerter })}` : ""}</option>`).join("")}</select>` : ""}
+    <p class="hint">${mode === "anhaengen" ? t("Das Transkript wird hinter die letzte Zeile dieses Meetings gehängt.") : t("Es entsteht eine Sitzung wie bei einer beendeten Aufnahme: auswerten oder als Replay abspielen.")}</p>`;
+  let fileText = "", fileName = "";
+  const take = async f => {
+    if (!f) return;
+    fileText = await f.text(); fileName = f.name;
+    $("#imp-name").textContent = f.name;
+  };
+  $("#imp-file").onchange = e => take(e.target.files[0]);
+  const drop = $("#imp-drop");
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); take(e.dataTransfer.files[0]); };
+  $("#imp-go").onclick = () => act(async () => {
+    const item = $("#imp-item")?.value, text = $("#imp-text").value.trim() || fileText;
+    if (!item && !text) throw new Error(t("Erst eine Datei, Text oder ein Inbox-Transkript wählen"));
+    const body = item ? { item } : { text, name: fileName };
+    $("#imp-go").disabled = true;
+    try {
+      if (importMode === "anhaengen") { await post("transkript-anhaengen", body); toast(t("Transkript angehängt")); }
+      else { const r = await api("/api/live/transkript", body); location.hash = r.id; }
+      $("#d-import").close();
+    } finally { $("#imp-go").disabled = false; }
+  });
+  $("#d-import").showModal();
+}
+$("#pk-import").onclick = () => act(() => openImport("neu"));
+
 // Element editor
 function openElement(id, defaults = {}) {
-  const p = currentProc();
+  const p = id ? ownerOf(id) : targetProc();
   if (!p) return;
   const e = id ? p.elemente.find(x => x.id === id) : { typ: "event", text: "", lane: defaults.lane ?? "", annahme: false };
   const others = p.elemente.filter(x => x.id !== id);
@@ -880,6 +1249,56 @@ function openElement(id, defaults = {}) {
   $("#el-text").focus();
 }
 $("#b-add-el").onclick = () => openElement(null);
+// Miro: debrief → Miro only; the board link is asked for once per session
+let miroAfterLogin = null;
+// OAuth: the login opens in a small window (it must open on the click itself, or the popup blocker stops it);
+// the callback page reports back with postMessage and the transfer continues.
+function miroLogin(then) {
+  miroAfterLogin = then;
+  const w = window.open("/miro/login", "miro-login", "width=640,height=760");
+  if (!w) toast(t("Das Login-Fenster wurde blockiert – bitte Pop-ups für diese Seite erlauben."), true);
+}
+window.addEventListener("message", e => {
+  if (e.data !== "miro-verbunden" || !/^http:\/\/([\w-]+\.)?(localhost|127\.0\.0\.1)(:\d+)?$/.test(e.origin)) return;
+  META.miro_verbunden = true;
+  toast(t("Mit Miro verbunden"));
+  const next = miroAfterLogin; miroAfterLogin = null;
+  if (next) next();
+});
+function miroSync(askBoard = false) {
+  if (!META.miro) {
+    toast(t("Miro ist noch nicht eingerichtet: client_id oder Access Token unter miro: in config.yaml eintragen (siehe README)."), true);
+    return;
+  }
+  let board = S.miro?.board ? `https://miro.com/app/board/${S.miro.board}/` : META.miro_board || "";
+  if (askBoard || !board) {
+    board = prompt(t("Link des Miro-Boards:"), board);
+    if (!board) return;
+  }
+  const send = () => {
+    const btn = $("#b-miro");
+    btn.disabled = true;
+    act(async () => {
+      try {
+        const r = await post("miro", { board });
+        toast(`${t("Nach Miro übertragen")} · <a href="${esc(r.url)}" target="_blank" rel="noopener">${t("Board öffnen")}</a>`);
+      } catch (e) {
+        if (!e.data?.login) throw e;
+        META.miro_verbunden = false;
+        toast(`${esc(e.message)} · <button class="btn sm" id="miro-relogin">${t("Mit Miro verbinden")}</button>`, true);
+        $("#miro-relogin").onclick = () => miroLogin(send);
+      } finally { btn.disabled = false; }
+    });
+  };
+  if (META.miro_oauth && !META.miro_verbunden) miroLogin(send);
+  else send();
+}
+$("#b-miro").onclick = () => miroSync();
+$("#b-proc-merge").onclick = () => {
+  const procs = S.prozesse || [];
+  const name = prompt(t("Die Prozesse werden zu einem zusammengeführt, die Rollen bleiben Lanes. Name des Gesamtprozesses:"), procs[0]?.name || "");
+  if (name) act(async () => { await post("prozess", { op: "prozesse_zusammenfuehren", ids: procs.map(p => p.id), name }); ui.proc = procs[0].id; });
+};
 $("#b-proc-rename").onclick = () => { const p = currentProc(); const name = p && prompt(t("Neuer Name:"), p.name); if (name) act(() => post("prozess", { op: "prozess_umbenennen", id: p.id, name })); };
 $("#b-proc-del").onclick = () => { const p = currentProc(); if (p && confirm(t("Prozess „{x}“ mit allen Elementen löschen?", { x: p.name }))) act(() => post("prozess", { op: "prozess_loeschen", id: p.id })); };
 
@@ -971,6 +1390,27 @@ $("#ctx-save").onclick = () => act(async () => {
   toast(t("Kontext übernommen"));
 });
 
+// ---------- More recordings ----------
+$("#b-attach").onclick = () => act(async () => {
+  const { meetings } = await api("/api/live/meetings?n=20");
+  const mine = new Set([S.quelle_id || S.id, ...(S.aufnahmen || []).map(a => a.id)]);
+  const free = meetings.filter(m => !mine.has(m.id) && new Date(m.start) >= new Date(S.start));
+  const when = m => new Date(m.start).toLocaleString(loc(), { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  $("#attach-body").innerHTML = `<button class="btn" id="at-import" style="margin-bottom:10px">${icon("open")} ${t("Vorhandenes Transkript einfügen …")}</button>
+    <p class="hint">${t("Die Aufnahme wird hinter dieses Meeting gehängt. Fragen, Annahmen und der Prozess bleiben, die Sprecher der neuen Aufnahme werden getrennt gezählt.")}</p>`
+    + ((S.aufnahmen || []).length ? `<h3 class="lbl">${t("Schon angehängt")}</h3><div class="list">${S.aufnahmen.map(a => `<div class="sub">${esc(a.titel)} · ${esc(when(a))}</div>`).join("")}</div>` : "")
+    + `<h3 class="lbl">${t("Neue Aufnahme")}</h3>` + (free.length ? free.map(m => `<button class="mt" data-attach="${m.id}">
+        ${m.laeuft ? `<span class="pill rec">${t("läuft")}</span>` : ""}<span class="t">${esc(m.titel)}<br><span class="s">${esc(when(m))} · ${t("{n} Zeilen", { n: m.zeilen })}</span></span></button>`).join("")
+      : `<p class="hint">${t("Keine spätere Aufnahme in MacWhisper.")}</p>`);
+  $("#at-import").onclick = () => { $("#d-attach").close(); act(() => openImport("anhaengen")); };
+  $$("#attach-body [data-attach]").forEach(b => b.onclick = () => act(async () => {
+    await post("aufnahme-anhaengen", { id: b.dataset.attach });
+    $("#d-attach").close();
+    toast(t("Aufnahme angehängt"));
+  }));
+  $("#d-attach").showModal();
+});
+
 // ---------- Speakers ----------
 function openSpeakers(focusLabel) {
   const labels = [...new Set(Object.values(LABELS))].filter(l => l !== "?");
@@ -981,7 +1421,8 @@ function openSpeakers(focusLabel) {
     return z ? z.text.slice(0, 90) : "";
   };
   $("#spk-body").innerHTML = labels.length ? labels.map(l => `<div class="spk-row"><b>${esc(l)}</b><input class="input" data-spk="${esc(l)}" list="dl-names" value="${esc(S.sprecher_namen[l] || "")}" placeholder="${esc(isPlaceholder(l) ? t("Name") : l)}"></div>
-      <p class="hint" style="margin:-4px 0 10px 128px">${esc(sample(l))}</p>`).join("") : `<p class="hint">${t("Noch keine Sprecher erkannt.")}</p>`;
+      <div style="margin:-4px 0 10px 128px"><p class="hint" style="margin:0 0 4px">${esc(sample(l))}</p>
+        <label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-listen="${esc(l)}" ${(S.stumm || []).includes(l) ? "" : "checked"}> ${t("Beiträge auswerten")}</label></div>`).join("") : `<p class="hint">${t("Noch keine Sprecher erkannt.")}</p>`;
   $("#d-spk").showModal();
   ($(`[data-spk="${CSS.escape(focusLabel || "")}"]`) || $("[data-spk]"))?.focus();
 }
@@ -989,6 +1430,9 @@ $("#spk-save").onclick = () => act(async () => {
   for (const inp of $$("[data-spk]")) {
     const name = inp.value.trim();
     if (name !== (S.sprecher_namen[inp.dataset.spk] || "")) await post("sprecher", { label: inp.dataset.spk, name });
+  }
+  for (const cb of $$("[data-listen]")) {
+    if (cb.checked === (S.stumm || []).includes(cb.dataset.listen)) await post("sprecher-stumm", { label: cb.dataset.listen, stumm: !cb.checked });
   }
   $("#d-spk").close();
   renderTranscript();
@@ -1020,6 +1464,7 @@ $("#model-save").onclick = () => act(async () => {
 
 // ---------- Columns on small screens ----------
 function showCol(id) {
+  if (SOLO) id = "c-board";
   ui.col = id;
   $$(".col").forEach(c => c.classList.toggle("show", c.id === id));
   $$("#mtabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.col === id)));
@@ -1033,7 +1478,7 @@ function route() {
   const id = location.hash.slice(1);
   if (id && id === sid && S) return;
   sid = id || null;
-  if (sid) openSession(sid); else { events?.close(); S = null; showPicker(); }
+  if (sid) openSession(sid).then(() => SOLO && showCol("c-board")); else { events?.close(); S = null; showPicker(); }
 }
 window.addEventListener("hashchange", route);
 translateStatic();

@@ -49,6 +49,8 @@
   .btn.primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 600; }
   .btn.primary:hover { filter: brightness(1.07); }
   .btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+  a.btn { text-decoration: none; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: pulse 1.2s infinite; }
   .btn.ghost:hover { background: var(--surface-2); color: var(--text); }
   .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn .kbd { font-size: 12px; opacity: .8; font-weight: 500; }
@@ -457,6 +459,7 @@
   <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-live" viewBox="0 0 24 24"><path d="M4.9 19.1a10 10 0 0 1 0-14.2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M19.1 4.9a10 10 0 0 1 0 14.2"/></symbol>
   <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
@@ -468,6 +471,7 @@
 <header>
   <h1><svg class="i"><use href="#i-inbox"/></svg> Transkript-Review <span class="count" id="count"></span></h1>
   <span class="spacer"></span>
+  <a class="btn ghost" id="open-live" href="/live" title="Live-Assistent: hört in laufende Meetings mit"><svg class="i"><use href="#i-live"/></svg> Live<span class="live-dot" id="live-dot" hidden></span></a>
   <button class="btn ghost" id="open-import" title="Ältere Transkripte suchen und importieren"><svg class="i"><use href="#i-import"/></svg> Importieren</button>
   <div class="seg-toggle" role="radiogroup" aria-label="Sprache" id="lang-toggle">
     <button role="radio" data-lang="de" aria-checked="true" aria-label="Deutsch">DE</button>
@@ -665,7 +669,7 @@ function translateStatic() {
 function setLang(l) {
   if (l === LANG) return;
   LANG = l;
-  try { localStorage.setItem("lang", JSON.stringify(l)); } catch {}
+  try { localStorage.setItem("lang", JSON.stringify(l)); } catch { /* storage can be blocked */ }
   translateStatic();
   renderedKey = null; setState(state);
   if ($("#settings").open) { renderKorrekturen(korrekturen); renderNamen(namen); renderVerlauf(); renderDuplikate(); renderModelList($("#models-settings"), { selected: state.modell, onPick: setDefaultModel }); showTab(store.get("settings-tab") || "kategorien"); }
@@ -695,8 +699,8 @@ function toast(msg, err = false) {
 }
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-  del(k) { try { localStorage.removeItem(k); } catch {} },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage can be blocked */ } },
+  del(k) { try { localStorage.removeItem(k); } catch { /* storage can be blocked */ } },
 };
 const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -1057,8 +1061,8 @@ function renderMain(item) {
   bind("#f-ent", v => d.entscheidungen = v.split("\n"));
   $("#f-proj").oninput = e => { d.projekt = e.target.value; d.person = null; changed(); };
   $("#f-pers").oninput = e => { d.person = e.target.value; changed(); };
-  $("#sw-proj").onclick = e => { d.projekt_speichern = !d.projekt_speichern; changed(); };
-  $("#sw-pers").onclick = e => { d.person_speichern = !d.person_speichern; changed(); };
+  $("#sw-proj").onclick = () => { d.projekt_speichern = !d.projekt_speichern; changed(); };
+  $("#sw-pers").onclick = () => { d.person_speichern = !d.person_speichern; changed(); };
 
   // Mode of the free-text fields: true when “+ New” is active
   const mode = { proj: !!(d.projekt && !projOf(d)), pers: false };
@@ -2001,7 +2005,7 @@ $("#config-save").onclick = async e => {
     toast(t("Gespeichert – Dienst startet neu …"));
     for (let i = 0; i < 30; i++) {   // wait until the server responds again
       await new Promise(r => setTimeout(r, 700));
-      try { await api("/api/state"); toast(t("Neu gestartet, neue Konfiguration aktiv")); break; } catch {}
+      try { await api("/api/state"); toast(t("Neu gestartet, neue Konfiguration aktiv")); break; } catch { /* not up yet: try again */ }
     }
     refresh();
   } catch (err) { $("#config-error").textContent = err.message; $("#config-error").hidden = false; }
@@ -2016,17 +2020,34 @@ window.addEventListener("hashchange", () => select(location.hash.slice(1)));
 let events = null, retryMs = 2000;
 function connectEvents() {
   events = new EventSource("/api/events");
-  events.addEventListener("state", e => { try { setState(JSON.parse(e.data)); } catch {} });
+  events.addEventListener("state", e => { try { setState(JSON.parse(e.data)); } catch { /* ignore a broken update */ } });
   events.onopen = () => { retryMs = 2000; };
   events.onerror = () => {
-    if (events.readyState !== EventSource.CLOSED) return;  // browser is still retrying by itself
-    setTimeout(connectEvents, retryMs);
+    if (events?.readyState !== EventSource.CLOSED) return;  // browser is still retrying by itself
+    setTimeout(() => { if (!document.hidden && events?.readyState === EventSource.CLOSED) connectEvents(); }, retryMs);
     retryMs = Math.min(retryMs * 2, 15000);
   };
 }
+// The "Live" link shows a red dot while MacWhisper is recording
+async function checkLive() {
+  try {
+    const res = await fetch("/api/live/meetings?n=3");
+    const running = (await res.json()).meetings.some(m => m.laeuft);
+    $("#live-dot").hidden = !running;
+    $("#open-live").title = running ? t("Live-Assistent: Eine Aufnahme läuft gerade") : t("Live-Assistent: hört in laufende Meetings mit");
+  } catch { /* the review page works without the live assistant */ }
+}
+checkLive();
+setInterval(checkLive, 30000);
 refresh();
 connectEvents();
 window.addEventListener("focus", () => { refresh(); if (events?.readyState === EventSource.CLOSED) { retryMs = 2000; connectEvents(); } });
+// A browser allows 6 connections per address and every open tab keeps one for its live updates: with many tabs
+// the page freezes because new requests wait forever. So background tabs let go and catch up when shown again.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { events?.close(); events = null; return; }
+  if (!events) { retryMs = 2000; refresh(); connectEvents(); }
+});
 </script>
 </body>
 </html>

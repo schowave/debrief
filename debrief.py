@@ -513,21 +513,21 @@ Write the summary ("zusammenfassung"), decisions ("entscheidungen"), todo texts 
 Respond with the JSON as specified by the schema.""" + korrekturen_prompt(cfg)
 
 
-def gateway_token(gw: dict) -> str:
-    """API key for the gateway: from `token_cmd`, `token_env` or directly from `token`."""
+def gateway_token(gw: dict, name: str = "gateway") -> str:
+    """API key of a config section (`gateway`, `miro`): from `token_cmd`, `token_env` or directly from `token`."""
     if gw.get("token_cmd"):
         proc = subprocess.run(gw["token_cmd"], shell=True, capture_output=True, text=True)
         if proc.returncode or not proc.stdout.strip():
-            raise RuntimeError(f"gateway.token_cmd returned no key: {proc.stderr.strip() or 'empty output'}")
+            raise RuntimeError(f"{name}.token_cmd returned no key: {proc.stderr.strip() or 'empty output'}")
         return proc.stdout.strip()
     if gw.get("token_env"):
         token = os.environ.get(gw["token_env"], "").strip()
         if not token:
-            raise RuntimeError(f"Environment variable {gw['token_env']} (gateway.token_env) is not set")
+            raise RuntimeError(f"Environment variable {gw['token_env']} ({name}.token_env) is not set")
         return token
     if gw.get("token"):
         return str(gw["token"]).strip()
-    raise RuntimeError("gateway needs token_cmd, token_env or token")
+    raise RuntimeError(f"{name} needs token_cmd, token_env or token")
 
 
 def claude_env(cfg: dict) -> dict:
@@ -669,7 +669,12 @@ def run_claude(cfg: dict, system: str, prompt: str, schema: dict, label: str,
     proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=900 if dirs else 600,
                           cwd=dirs[0] if dirs else HERE, env=claude_env(cfg))
     if proc.returncode != 0:
-        raise RuntimeError(f"claude failed ({proc.returncode}): {proc.stderr or proc.stdout}")
+        # with --output-format json the actual error is the `result` on stdout; stderr often only holds warnings
+        try:
+            detail = json.loads(proc.stdout).get("result") or proc.stdout
+        except ValueError:
+            detail = proc.stdout
+        raise RuntimeError(f"claude failed ({proc.returncode}): {' · '.join(filter(None, [str(detail).strip()[:1000], proc.stderr.strip()[:300]]))}")
     out = json.loads(proc.stdout)
     if out.get("is_error") or not out.get("structured_output"):
         raise RuntimeError(f"No structured response: {out.get('result')}")

@@ -1,0 +1,6 @@
+# Pyflakes rules only (unused imports and variables, undefined names, dead expressions): `mise run lint`
+target-version = "py311"
+extend-exclude = ["node_modules"]
+
+[lint]
+select = ["F"]

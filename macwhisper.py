@@ -87,9 +87,15 @@ def speakers(con: sqlite3.Connection, sid: str) -> dict[str, str]:
     return labels
 
 
+def line_ids(con: sqlite3.Connection, sid: str) -> set[str]:
+    """Ids of the session's current lines. While recording, MacWhisper deletes unconfirmed lines and writes
+    confirmed ones under new ids; an incremental read by `dateUpdated` does not see the deletions."""
+    return {r[0] for r in con.execute("select hex(id) from transcriptline where sessionId = unhex(?)", (sid,))}
+
+
 def lines(con: sqlite3.Connection, sid: str, since: str | None = None) -> list[dict]:
     """Lines of a session; with `since` (a `dateUpdated` value) only those changed afterwards. `stand` is the
-    value to pass as `since` next time."""
+    value to pass as `since` next time. `nr` is MacWhisper's orderIndex, which stays empty while recording."""
     rows = con.execute(
         """select hex(id) lid, orderIndex, start, end, text, hex(speakerID) spk, isConfirmed, dateUpdated
            from transcriptline where sessionId = unhex(?) and (? is null or dateUpdated > ?)

@@ -316,12 +316,51 @@ Replay abspielen (beschleunigt, als liefe das Meeting gerade).
   Das Feld oben nimmt Anweisungen („Fokus auf Fehlerfälle“, bleibt als Chip, bis du sie entfernst; „nur für den nächsten
   Lauf“ ankreuzbar) und Korrekturen („Der Prozess startet erst bei der Freigabe“) – Korrekturen erkennt der Assistent
   und macht Fakten daraus.
+- **Was mitgehört wird**: *Nicht mithören* (oben) hält alles ab jetzt aus der Analyse heraus, bis du wieder einschaltest –
+  anders als *Pause*, die nur die Analyse anhält und danach nachholt. Einzelne Absätze schaltest du mit dem Auge neben
+  der Uhrzeit ab, einen Sprecher dauerhaft unter *Sprecher benennen*. Solche Zeilen bleiben im Transkript (durchgestrichen),
+  erreichen aber nie das Modell. Was vorher schon ausgewertet war, bleibt in der Zusammenfassung.
+- **Fortsetzen**: Eine beendete Sitzung macht mit *Fortsetzen* weiter – Fragen, Annahmen, Prozess und Anweisungen bleiben;
+  sie bleibt offen, bis du beendest, auch wenn die Aufnahme zu Ende oder länger pausiert ist. Der Link *Live* auf der
+  Review-Seite zeigt einen roten Punkt, solange MacWhisper aufnimmt.
+- **Neue Sitzung in derselben Aufnahme**: *Neue Sitzung ab jetzt* beendet die Sitzung (nach einer letzten Analyse) und beginnt
+  in der laufenden Aufnahme eine neue, ab dem aktuellen Stand – Kontext, Sprechernamen und Modell werden übernommen, Fragen,
+  Annahmen und Prozess fangen leer an. Die alte Sitzung endet an dieser Stelle, ein Fortsetzen übernimmt den neuen Teil also
+  nicht. Das Inbox-Transkript der ganzen Aufnahme wird mit der Sitzung verknüpft, in der du zuletzt gearbeitet hast.
+- **Weitere Aufnahme im selben Meeting**: Nach einer Pause startet MacWhisper oft eine neue Aufnahme. *Aufnahme
+  anhängen* (oben) hängt sie an die Sitzung: Ihre Zeilen folgen auf derselben Zeitachse (mit Trenner „Aufnahme 2“),
+  Fragen, Annahmen und Prozess bleiben, ihre Sprecher werden getrennt gezählt („Speaker 1 (2)“). In der Meeting-Auswahl
+  bietet eine neue Aufnahme, die nach Fortsetzung aussieht (binnen 4 Stunden nach einer Sitzung), *Weiter in: …* an.
+  Das Inbox-Transkript jeder Aufnahme wird mit der Sitzung verknüpft und bekommt die passenden Sprechernamen.
 - **Prozess** (rechts): Event-Storming-Board auf Process Level – Akteur → Command → Domain Event → Policy, Read Models,
   externe Systeme, Aggregate und Hotspots, eine Lane je Akteur bzw. Bounded Context. Offene Fragen erscheinen als rote,
   nummerierte Hotspots am betroffenen Element (Klick springt zur Frage und umgekehrt). Direkt bearbeiten: Klick öffnet
   den Editor, Ziehen verschiebt (auch in eine andere Lane), Verbindungen setzen. Was du anfasst oder bestätigst, ist
   **gesperrt** – der Assistent macht dazu nur **Vorschläge** (übernehmen/ablehnen); Gelöschtes fügt er nicht wieder ein.
-  Mehrere Prozesse pro Meeting als Tabs.
+  Der Assistent modelliert einen Prozess pro Ablauf, die Rollen als Lanes; gibt es trotzdem mehrere, zeigt
+  *Gesamtbild* sie auf einer Zeitachse (eine Lane je Akteur), *Zu einem Prozess zusammenführen* macht sie dauerhaft
+  zu einem.
+- **Prozess per Anweisung ändern**: Das Feld über dem Board nimmt ganz normale Sätze („Füge nach »Projekt angelegt« eine
+  Policy für fehlende Daten ein“, „Benenne die Lane Manager in Teamleitung um“); der Assistent führt sie als deine eigenen,
+  gesperrten Änderungen aus. *Rückgängig* nimmt die letzte Anweisung, Neuerzeugung oder angewendeten Review-Befund zurück.
+- **Neu erzeugen**: *Neu erzeugen* baut den Prozess mit allem auf, was inzwischen feststeht – Gespräch, beantwortete Fragen,
+  bewertete Annahmen, Anweisungen – plus einem Hinweis, was sich geändert hat. *Überarbeiten* behält, was noch stimmt,
+  *Neu aufbauen* nur deine gesperrten Elemente.
+- **Review**: *Review* prüft den Prozess wie ein erfahrener Prozessmodellierer – Vollständigkeit, Sonderfälle, Verantwortung,
+  Fachsprache, Entscheidungen, Daten und Systeme, Granularität, Konsistenz zum Gespräch, Kennzahlen. Worauf geachtet wird,
+  ist ein Prompt, den du ändern kannst (pro Sitzung oder als Standard gespeichert). Befunde werden nie von selbst
+  umgesetzt: *Anwenden* (wenn die Lösung klar ist), *Als Frage übernehmen* oder *Verwerfen* (kommt nicht wieder).
+- **Eigenes Fenster**: *Eigenes Fenster* öffnet den Prozess allein (`/live?nur=prozess#<Sitzung>`), z. B. auf einem zweiten
+  Bildschirm oder zum Teilen – dieselbe Sitzung, voll bearbeitbar.
+- **Vorhandene Transkripte**: *Transkript einfügen* (Meeting-Auswahl) oder *Aufnahme anhängen → Vorhandenes Transkript
+  einfügen* nehmen eine Datei von der Platte (ziehen oder wählen), eingefügten Text oder ein Transkript aus der
+  Review-Inbox: MacWhisper-Exporte, Teams-Chats, WebVTT/SRT, „Name: Text“-Zeilen oder Fließtext. Ohne Zeiten werden sie
+  aus der Sprechgeschwindigkeit geschätzt. Es wird eine eigene Sitzung (auswerten oder als Replay abspielen) oder
+  folgt der letzten Zeile der offenen Sitzung.
+- **Miro**: *Nach Miro* zeichnet das Gesamtbild in einen Frame auf einem Miro-Board – Stickies in Event-Storming-Farben,
+  Lanes, Pfeile, Hotspot-Nummern und die offenen Fragen. Nur in eine Richtung (debrief → Miro); der nächste Klick
+  aktualisiert dieselben Stickies, in Miro Gelöschtes wird neu gezeichnet. Den Board-Link fragt die Seite einmal pro
+  Sitzung ab.
 - **Kontext** (oben): Termin, Kategorie/Projekt (aus dem Termin vorgeschlagen), ein oder mehrere Repositories (pro
   Projekt in `categories.yaml` als `repos:` merkbar und beim nächsten Termin vorausgewählt), Ziel und Teilnehmer,
   frühere Notizen aus dem Projektordner.
@@ -344,6 +383,21 @@ live:
   fenster_min: 15   # wörtlicher Teil des Transkripts
   mitteilung: true  # Mitteilung, wenn eine Aufnahme startet
 ```
+
+Für Miro unter *Miro → Settings → Your apps* eine App anlegen, mit den Scopes `boards:read` und `boards:write` und der
+Redirect-URI `http://localhost:8765/miro/callback` (dein Port), dann Client-ID und Secret eintragen:
+
+```yaml
+miro:
+  client_id: "3458764…"
+  client_secret_cmd: security find-generic-password -s miro-client-secret -w   # oder client_secret_env / client_secret
+  board: https://miro.com/app/board/uXjV…=/   # optional: Standard-Board
+  #redirect_uri: http://localhost:8765/miro/callback   # nur wenn abweichend
+```
+
+Beim ersten *Nach Miro* öffnet sich Miros Login in einem kleinen Fenster; debrief legt das Token in `miro_token.json`
+ab (nicht im Git, nur für dich lesbar) und erneuert es selbst. Statt OAuth geht auch ein fester Access Token:
+`token_cmd`, `token_env` oder `token` unter `miro:` (wie beim Gateway).
 
 ### Einstellungen auf der Review-Seite
 
@@ -393,6 +447,8 @@ im Script der Review-Seite.
 | `server.py` | Dienst: Inbox überwachen, Analyse, Review-Seite + API |
 | `debrief.py` | Analyse (Prompt, Schema), Notiz rendern/ablegen; auch als CLI nutzbar |
 | `importer.py` | Import aus Ordnern, per Drag & Drop und aus der Zwischenablage (Suche, Vorschau, Teams-Chat-Köpfe, Kopie in die Inbox) |
+| `transcripts.py` | vorhandene Transkripte (MacWhisper-Export, Chat, VTT/SRT, Text) als Aufnahme für den Live-Assistenten |
+| `miro.py` | Überträgt das Event-Storming-Board auf ein Miro-Board (REST API v2) |
 | `live.py`, `macwhisper.py` | Live-Assistent (Sitzungen, Regeln fürs Zusammenführen, Prompts, Prozessbibliothek) und schreibgeschützter Zugriff auf MacWhispers Datenbank |
 | `static/live.html` | Seite des Live-Assistenten |
 | `tests/` | Tests für Todo-Zuordnung, Chat-Import, Duplikate und den Live-Assistenten (`mise run test`) |

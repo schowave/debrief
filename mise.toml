@@ -62,9 +62,9 @@ description = "Run the tests"
 run = "uv run --no-project --with pytest --with pyyaml python -m pytest -q tests"
 
 [tasks.lint]
-description = "Lint the review page (static/)"
+description = "Lint the pages (static/, ESLint) and the Python code (ruff)"
 shell = "bash -c"
-run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static"
+run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static && uv run --no-project --with ruff ruff check ."
 
 [tasks.check]
 description = "Lint and tests – runs before every commit once `mise run hooks` is set up"

@@ -25,6 +25,15 @@ model: sonnet
 #  #   token:     the key itself (then do not commit config.yaml)
 #  token_cmd: security find-generic-password -s llm-gateway -w
 
+# Optional: Miro board for the live assistant's event storming board ("To Miro"). Create an app under
+# Miro → Settings → Your apps (scopes boards:read, boards:write, redirect URI http://localhost:8765/miro/callback).
+# OAuth: the first "To Miro" opens Miro's login; the token is kept in miro_token.json and renewed automatically.
+#miro:
+#  client_id: "3458764…"
+#  client_secret_cmd: security find-generic-password -s miro-client-secret -w   # or client_secret_env / client_secret
+#  board: https://miro.com/app/board/uXjV…=/   # optional: default board
+#  # instead of OAuth a fixed access token: token_cmd / token_env / token
+
 # Below this confidence the note goes to `unklar_ordner` instead of the customer
 min_konfidenz: 0.6
 unklar_ordner: Transkripte/_Unklar
