@@ -88,6 +88,7 @@ Vault-Pfad, Name und Kategorien anpassen, dann `mise run install` erneut ausfüh
 | `mise run lint` | die Seiten mit ESLint und den Python-Code mit ruff prüfen |
 | `mise run check` | Lint und Tests (läuft nach `mise run hooks` vor jedem Commit) |
 | `mise run smoke` | die Live-Seite in headless Chrome gegen einen Wegwerf-Server durchklicken (Fixture-Daten, Modell-Stub; braucht Google Chrome) |
+| `mise run demo` | `docs/live-demo.gif` genauso aufnehmen (braucht Google Chrome und ffmpeg) |
 
 `mise run install` und `mise run uninstall` rufen `install.sh` auf.
 
@@ -301,6 +302,10 @@ erneut anfragen: `mise run calendar-access`; verwalten unter Systemeinstellungen
 Kalender. Wird die App neu gebaut, fragt macOS erneut (die Erlaubnis gilt pro Build).
 
 ### Live-Assistent
+
+![Live-Assistent: Transkript, vorgeschlagene Fragen und das Event-Storming-Board während eines Calls](docs/live-demo.gif)
+
+*Demo mit erfundenen Daten und Modell-Stub, aufgenommen mit `mise run demo`.*
 
 `http://debrief.localhost:8765/live` – am besten in einem eigenen Fenster neben dem Call (taucht so beim Teilen eines
 Browser-Tabs nicht auf). Startet MacWhisper die Aufnahme eines Meetings, kommt die Mitteilung „Live-Assistent

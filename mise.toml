@@ -70,6 +70,10 @@ run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx esl
 description = "Click through the live page in headless Chrome against a scratch server (fixture data, model stub; needs Google Chrome)"
 run = "uv run --no-project --with playwright --with pyyaml python tests/smoke.py"
 
+[tasks.demo]
+description = "Record docs/live-demo.gif with invented data and a model stub (needs Google Chrome and ffmpeg)"
+run = "uv run --no-project --with playwright --with pyyaml python docs/make_live_demo.py"
+
 [tasks.check]
 description = "Lint and tests – runs before every commit once `mise run hooks` is set up"
 depends = ["lint", "test"]
