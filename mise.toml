@@ -5,6 +5,7 @@ uv = "latest"
 "github:julienXX/terminal-notifier" = "3.1.0"
 jq = "latest"  # for `mise run status`
 node = "lts"  # for `mise run lint`
+ruff = "0.17.5"  # for `mise run lint`; pinned so a new ruff release shows up in a Renovate PR, not on main
 
 [env]
 DEBRIEF_LABEL = "de.{{ exec(command='id -un') }}.debrief"
@@ -64,7 +65,7 @@ run = "uv run --no-project --with pytest --with pyyaml python -m pytest -q tests
 [tasks.lint]
 description = "Lint the pages (static/, ESLint) and the Python code (ruff)"
 shell = "bash -c"
-run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static && uv run --no-project --with ruff ruff check ."
+run = "{ [ node_modules -nt package-lock.json ] || npm ci --silent; } && npx eslint static && ruff check ."
 
 [tasks.smoke]
 description = "Click through the live page in headless Chrome against a scratch server (fixture data, model stub; needs Google Chrome)"

@@ -1,0 +1,24 @@
+name: CI
+
+# Lint and tests (`mise run check`, the same as the pre-commit hook). Renovate
+# automerges its update PRs only when this passes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Only what lint and tests need; terminal-notifier and jq are for the local service.
+      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+        with:
+          install_args: uv node ruff
+      - run: mise run check
