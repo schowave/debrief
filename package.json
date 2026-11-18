@@ -1,4 +1,5 @@
 {
+  "name": "debrief",
   "private": true,
   "description": "Only for linting the review page: `mise run lint`",
   "devDependencies": {
