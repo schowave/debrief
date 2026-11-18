@@ -2,7 +2,8 @@
   "private": true,
   "description": "Only for linting the review page: `mise run lint`",
   "devDependencies": {
-    "eslint": "9.39.5",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
     "eslint-plugin-html": "8.2.1",
     "globals": "17.14.0"
   }
