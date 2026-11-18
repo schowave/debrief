@@ -75,6 +75,11 @@ run = "uv run --no-project --with playwright --with pyyaml python tests/smoke.py
 description = "Record docs/live-demo.gif with invented data and a model stub (needs Google Chrome and ffmpeg)"
 run = "uv run --no-project --with playwright --with pyyaml python docs/make_live_demo.py"
 
+[tasks.setup]
+description = "Prepare a fresh clone for `mise run check`: ESLint deps (npm ci) and the pre-commit hook – not the launchd service (that is `install`)"
+depends = ["hooks"]
+run = "npm ci --silent"
+
 [tasks.check]
 description = "Lint and tests – runs before every commit once `mise run hooks` is set up"
 depends = ["lint", "test"]
