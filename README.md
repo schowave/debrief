@@ -226,6 +226,7 @@ All tasks run through mise (`mise tasks` lists them):
 | `mise run calendar-access` | request/check calendar access of the helper |
 | `mise run dry-run` | analyse the inbox, only print |
 | `mise run sort` | direct mode: file without review |
+| `mise run setup` | prepare a fresh clone for `check`: ESLint deps (`npm ci`) and the pre-commit hook (does not touch the service) |
 | `mise run check` | `lint` (ESLint, ruff) and `test` (pytest) – runs before every commit after `mise run hooks` |
 | `mise run smoke` | click through the live page in headless Chrome against a scratch server (fixture data, model stub) |
 | `mise run demo` | record `docs/live-demo.gif` the same way (needs Google Chrome and ffmpeg) |

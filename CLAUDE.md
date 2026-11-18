@@ -1,5 +1,5 @@
 - The review page is a single file, `static/index.html` (inline script), the live assistant `static/live.html`; their English texts live in `static/i18n.js` (`mise run check` reports a missing entry).
-- `mise run check` = lint (ESLint for the pages, ruff for Python) + tests (also the pre-commit hook). After changing `server.py`, `debrief.py`, `live.py`, `macwhisper.py`, `miro.py` or `transcripts.py`, `mise run restart` reloads the running service.
+- `mise run setup` prepares a fresh clone (npm ci, pre-commit hook; not the service – that is `install`). `mise run check` = lint (ESLint for the pages, ruff for Python) + tests (also the pre-commit hook). After changing `server.py`, `debrief.py`, `live.py`, `macwhisper.py`, `miro.py` or `transcripts.py`, `mise run restart` reloads the running service.
 - MacWhisper's database is only ever opened read-only (`macwhisper.py`).
 - `mise run smoke` clicks through the live page in headless Chrome against a scratch server (fixture MacWhisper database of a running recording, model stub): run it after changing `static/live.html` or the live endpoints. Try UI flows there, never on the real sessions in `live/`.
 - Every open page holds one SSE connection and releases it when hidden: browsers allow 6 per host, and more open tabs froze the app. Keep that for new streams.
