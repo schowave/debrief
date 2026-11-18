@@ -7,7 +7,7 @@
   "pre-commit": { "enabled": true },
   "lockFileMaintenance": { "enabled": true, "automerge": true },
   "automergeType": "pr",
-  "platformAutomerge": false,
+  "platformAutomerge": true,
   "packageRules": [
     {
       "description": "Patch and minor updates in one PR, merged by themselves once CI is green",
